@@ -1,0 +1,16 @@
+# Frontend artifacts (built/served separately)
+frontend/node_modules
+frontend/dist
+
+# Python
+__pycache__
+*.pyc
+.venv
+venv
+
+# Generated QR output
+qr-*.svg
+
+# Misc
+.git
+.DS_Store

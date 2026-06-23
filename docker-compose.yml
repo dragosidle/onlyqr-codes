@@ -1,0 +1,27 @@
+# Default compose file — dev stack.
+# Bare `docker compose` commands (up, down, logs, ps) all use this.
+# Production: docker compose -f docker-compose.prod.yml up --build -d
+
+services:
+  valkey:
+    image: valkey/valkey:8-alpine
+    container_name: onlyqr-valkey-dev
+    restart: unless-stopped
+
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: onlyqr-codes-dev
+    ports:
+      - "8000:8000"
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/frontend/node_modules
+    environment:
+      - ENV=development
+      - VITE_USE_POLLING=true
+      - REDIS_URL=redis://valkey:6379
+    depends_on:
+      - valkey

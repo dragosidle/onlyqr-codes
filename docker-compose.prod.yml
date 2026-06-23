@@ -1,0 +1,32 @@
+# OnlyQR — production stack. ONE self-contained container: gunicorn serves both
+# the built React app and the /api endpoints (FastAPI StaticFiles).
+#   docker compose -f docker-compose.prod.yml up --build -d
+#
+# Exposes plain HTTP on 127.0.0.1:8000 (edge-agnostic). On a multi-app host, a
+# single shared reverse proxy (Caddy/Traefik — chosen at M3) terminates TLS and
+# routes the domain here. Shows up as two containers (`onlyqr-codes-prod` + `onlyqr-valkey-prod`).
+
+services:
+  valkey:
+    image: valkey/valkey:8-alpine
+    container_name: onlyqr-valkey-prod
+    restart: always
+    volumes:
+      - valkey-data:/data
+
+  api:
+    build:
+      context: .
+      target: prod
+    container_name: onlyqr-codes-prod
+    restart: always
+    ports:
+      - "127.0.0.1:8000:8000" # localhost only — nginx is the public entry point
+    environment:
+      - ENV=production
+      - REDIS_URL=redis://valkey:6379
+    depends_on:
+      - valkey
+
+volumes:
+  valkey-data:

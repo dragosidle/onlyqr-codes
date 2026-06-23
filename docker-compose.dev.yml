@@ -1,0 +1,32 @@
+# OnlyQR — development stack, a SINGLE container running both backend + frontend.
+#   docker compose -f docker-compose.dev.yml up --build
+#
+#   api      -> http://localhost:8000   (FastAPI, uvicorn --reload)
+#   frontend -> http://localhost:5173   (Vite dev server, HMR)  <-- open this
+#
+# Shows up as two containers in `docker stats`: onlyqr-codes-dev + onlyqr-valkey-dev.
+# Both processes hot-reload; the frontend proxies /api to localhost:8000 in-container.
+
+services:
+  valkey:
+    image: valkey/valkey:8-alpine
+    container_name: onlyqr-valkey-dev
+    restart: unless-stopped
+
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: onlyqr-codes-dev
+    ports:
+      - "8000:8000"
+      - "5173:5173"
+    volumes:
+      - .:/app # live source for both backend + frontend reload
+      - /app/frontend/node_modules # keep the image's linux deps (don't shadow with host)
+    environment:
+      - ENV=development
+      - VITE_USE_POLLING=true # FS-event polling so HMR fires on bind mounts (macOS/Windows)
+      - REDIS_URL=redis://valkey:6379
+    depends_on:
+      - valkey

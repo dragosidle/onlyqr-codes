@@ -1,0 +1,678 @@
+@font-face {
+	font-family: 'Switzer';
+	src: url('./Switzer-Variable.ttf') format('truetype');
+	font-weight: 100 900;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Gardenia';
+	src: url('./Gardenia-ExtraBold Regular.otf') format('opentype');
+	font-weight: 800;
+	font-style: normal;
+	font-display: swap;
+}
+
+:root {
+	--bg: #f6f6f6;
+	--panel: #1a1d24;
+	--border: #2a2f3a;
+	--text: #e6e8ec;
+	--muted: #9aa3b2;
+	--accent: #4f8cff;
+	--blue: #18a6ff;
+	--generate-idle: #79a0e9;
+	--generate-active: #e8f0ff;
+	--input-bg: #fafafa;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+input,
+button,
+select,
+textarea {
+	font-family: inherit;
+}
+
+body {
+	margin: 0;
+	background: var(--bg);
+	color: var(--text);
+	font-family: 'Switzer', sans-serif;
+}
+
+.hero {
+	width: 100%;
+	/* height: 100vh; */
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow-y: auto;
+	/* Keep the carousel's off-center cards from forcing horizontal page scroll. */
+	overflow-x: hidden;
+}
+
+.inner {
+	width: 100%;
+	max-width: 860px;
+	margin: 0 auto;
+	height: 100%;
+}
+
+.site-header {
+	width: 100%;
+	padding: 20px 0;
+	z-index: 100;
+}
+
+.site-header .inner {
+	display: flex;
+	justify-content: center;
+	align-items: flex-start;
+}
+
+.header-left {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 3px;
+}
+
+.brand {
+	margin: 0;
+	font-family: 'Gardenia', sans-serif;
+	font-size: 40px;
+	font-weight: 800;
+}
+
+.site-subtitle {
+	margin: 0;
+	font-size: 1.2rem;
+	font-weight: 400;
+	color: #444444;
+}
+
+.value-prop {
+	margin: 0;
+	font-size: 1rem;
+	color: #888888;
+}
+
+.hero .inner {
+	padding-top: 48px;
+	padding-bottom: 48px;
+}
+
+.type-tabs {
+	position: relative;
+	display: flex;
+	justify-content: center;
+	margin-bottom: 12px;
+}
+
+.type-tab-indicator {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	background: #fff;
+	border-radius: 999px;
+	transition:
+		left 100ms ease-out,
+		width 100ms ease-out;
+	pointer-events: none;
+}
+
+.type-tab {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	padding: 8px 16px 8px 10px;
+	background: transparent;
+	border: none;
+	border-radius: 999px;
+	cursor: pointer;
+	font-size: 14px;
+	font-weight: 400;
+	color: var(--muted);
+	transition: color 100ms ease-out;
+	white-space: nowrap;
+}
+
+.type-tab.active {
+	color: #0f1115;
+}
+
+.type-tab.disabled {
+	opacity: 0.8;
+	cursor: not-allowed;
+}
+
+.app-layout {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 64px;
+}
+
+.controls-col {
+	width: 100%;
+	max-width: 480px;
+	min-width: 0;
+}
+
+.qr-row {
+	display: flex;
+	gap: 0;
+	align-items: flex-start;
+	justify-content: center;
+	position: relative;
+	/* Room above the cards for the floating domain chips. */
+	padding-top: 32px;
+}
+
+.qr-col {
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+/* Horizontal carousel of domain cards. Centered by justify-content; the active
+   card is then nudged to dead center via a transform set in JS (trackX). */
+.qr-track {
+	position: relative;
+	display: flex;
+	align-items: flex-start;
+	gap: 48px;
+}
+
+/* Each card = a floating domain chip above its own QR preview. */
+.qr-card {
+	position: relative;
+	flex: 0 0 auto;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+/* Off-center cards are de-emphasized and clickable to bring into focus. The
+   dim sits on the preview (not the whole card) so the chip can still surface at
+   full opacity on hover. */
+.qr-card:not(.active) {
+	cursor: pointer;
+}
+
+.qr-card:not(.active) .preview {
+	opacity: 0.3;
+	transition: opacity 0.35s ease;
+}
+
+/* Off-center chips stay hidden until their card is hovered. */
+.qr-card:not(.active) .domain-chip {
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 150ms ease;
+}
+
+.qr-card:not(.active):hover .domain-chip {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+/* Download button, overlaid at the bottom-center of the QR, revealed on hover. */
+.qr-download {
+	position: absolute;
+	bottom: 16px;
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 10;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.25rem;
+	white-space: nowrap;
+	padding: 8px 16px 8px 12px;
+	border-radius: 5rem;
+	border: 0.5px solid #d7d7d7;
+	background: rgba(255, 255, 255, 0.75);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.1);
+	color: #343330;
+	cursor: pointer;
+	opacity: 0;
+	pointer-events: none;
+	transition:
+		opacity 150ms ease,
+		background 150ms ease-out;
+	font-weight: 500;
+}
+
+.preview:hover .qr-download {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.qr-download:hover {
+	background: rgba(239, 239, 239, 0.75);
+	transition: background 100ms ease-in;
+}
+
+/* Copy SVG button at the bottom of the focused card (copies that card's QR). */
+.copy-svg-btn {
+	margin-top: 16px;
+}
+
+/* Off-center cards: punch + download stay hidden on hover; the bottom Copy
+   button is hidden entirely (only the chip surfaces on hover). */
+.qr-card:not(.active) .preview:hover .punch-btn,
+.qr-card:not(.active) .preview:hover .qr-download {
+	opacity: 0;
+	pointer-events: none;
+}
+
+.qr-card:not(.active) .copy-svg-btn {
+	opacity: 0;
+	pointer-events: none;
+}
+
+.controls {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.input-with-action {
+	position: relative;
+	display: flex;
+	align-items: center;
+	min-width: 120px;
+	border-radius: 100px;
+	border: 1px solid #e8e8e8;
+	background: var(--input-bg);
+	padding-right: 8px;
+	transition:
+		border-bottom-color 100ms ease,
+		box-shadow 100ms ease;
+}
+
+.input-with-action:focus-within {
+	background: #fff;
+	border-bottom-width: 1.5px;
+	border-bottom-color: #e8e8e8;
+	box-shadow:
+		0 -2px 5px 0 rgba(125, 125, 125, 0.1) inset,
+		0 2px 5px 0 #fff inset,
+		0 2px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.input-with-action input {
+	flex: 1;
+	padding: 16px 12px 16px 32px;
+	border: none;
+	background: transparent;
+	border-radius: 100px;
+	color: #111111;
+	font-size: 19px;
+	font-weight: 400;
+	min-width: 120px;
+	outline: none;
+}
+
+.input-prefix {
+	position: absolute;
+	left: 32px;
+	top: 50%;
+	transform: translateY(-50%);
+	font-size: 19px;
+	font-weight: 400;
+	color: #111111;
+	pointer-events: none;
+	white-space: nowrap;
+	user-select: none;
+	transition: opacity 120ms ease;
+}
+
+.input-with-action input::placeholder {
+	opacity: 0.3;
+}
+
+.input-with-action input:-webkit-autofill,
+.input-with-action input:-webkit-autofill:hover,
+.input-with-action input:-webkit-autofill:focus,
+.input-with-action input:-webkit-autofill:active {
+	-webkit-box-shadow: 0 0 0 1000px #fff inset;
+	-webkit-text-fill-color: #111111;
+	transition: background-color 9999s ease-in-out 0s;
+}
+
+.input-with-action .generate-btn {
+	flex-shrink: 0;
+	border: none;
+	font-size: 14px;
+	font-weight: 400;
+	cursor: pointer;
+	white-space: nowrap;
+	overflow: visible;
+	user-select: none;
+}
+
+.input-with-action .generate-btn:hover:not(:disabled) {
+	background: #2b79ff !important;
+	transition:
+		background 100ms ease,
+		color 100ms ease,
+		box-shadow 100ms ease !important;
+}
+
+.input-with-action .generate-btn:disabled {
+	cursor: default;
+	background: #e7e7e7 !important;
+	color: #bbbbbb !important;
+	border: none !important;
+	box-shadow: none !important;
+}
+
+.checkbox {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	cursor: pointer;
+	color: #333333;
+	font-size: 14px;
+}
+
+.hole-options {
+	display: flex;
+	gap: 16px;
+}
+
+fieldset {
+	flex: 1;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	padding: 10px 12px;
+}
+
+legend {
+	color: #666666;
+	font-size: 14px;
+	padding: 0 4px;
+}
+
+fieldset label {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	text-transform: capitalize;
+	padding: 2px 0;
+	cursor: pointer;
+	color: #333333;
+	font-size: 14px;
+}
+
+button {
+	border: none;
+	border-radius: 8px;
+	padding: 11px 16px;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+button:disabled {
+	opacity: 0.6;
+	cursor: default;
+}
+
+.primary {
+	background: var(--accent);
+	color: white;
+}
+
+.secondary {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 0.25rem;
+	padding: 16px 24px 16px 16px;
+	border-radius: 5rem;
+	border: 0.5px solid #d7d7d7;
+	background: rgba(255, 255, 255, 0.75);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.1);
+	color: #333333;
+	transition: background 150ms ease-out;
+	font-weight: 500;
+}
+
+.secondary:hover {
+	background: rgba(239, 239, 239, 0.75);
+	transition: background 100ms ease-in;
+}
+
+.error {
+	color: #ff6b6b;
+	margin: 0;
+	font-size: 14px;
+}
+
+.result {
+	margin-top: 28px;
+	text-align: center;
+}
+
+.preview {
+	position: relative;
+	padding: 12px;
+	display: inline-block;
+}
+
+/* Each card's own domain chip, floating just above its QR preview. */
+/* Chip + delete float above the QR. The chip is the only in-flow child so it
+   stays centered over the card; the delete button is pinned just to its right. */
+.chip-row {
+	position: absolute;
+	left: 50%;
+	top: -12px;
+	transform: translate(-50%, -100%);
+	z-index: 20;
+	display: flex;
+	align-items: center;
+}
+
+.domain-chip {
+	display: flex;
+	padding: 0.5rem 1rem;
+	justify-content: center;
+	align-items: center;
+	gap: 0.625rem;
+	white-space: nowrap;
+	background: #fafafa;
+	border: 0.5px solid #cfcfcf;
+	border-radius: 1.875rem;
+	font-size: 14px;
+	font-weight: 400;
+	color: #333333;
+	box-shadow:
+		0 -2px 5px 0 rgba(125, 125, 125, 0.1) inset,
+		0 2px 5px 0 #fff inset,
+		0 1px 2px 0 rgba(0, 0, 0, 0.05);
+	transition:
+		border-color 120ms ease,
+		color 120ms ease;
+}
+
+/* Round delete button: same height and look as the chip, icon only. Pinned to
+   the chip's right (8px gap) and only revealed when the focused card is hovered. */
+.chip-delete {
+	position: absolute;
+	left: 100%;
+	margin-left: 8px;
+	top: 0;
+	bottom: 0;
+	aspect-ratio: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	background: #fafafa;
+	border: 0.5px solid #cfcfcf;
+	border-radius: 50%;
+	color: #333333;
+	box-shadow:
+		0 -2px 5px 0 rgba(125, 125, 125, 0.1) inset,
+		0 2px 5px 0 #fff inset,
+		0 1px 2px 0 rgba(0, 0, 0, 0.05);
+	cursor: pointer;
+	opacity: 0;
+	pointer-events: none;
+	transition:
+		opacity 150ms ease,
+		background 150ms ease-out,
+		color 150ms ease-out,
+		border-color 150ms ease-out;
+}
+
+.chip-delete.show {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.chip-delete:hover {
+	background: #fdeced;
+	border-color: #f3b9bb;
+	color: #e5484d;
+}
+
+/* Scope QR sizing to the QR/placeholder svg only — not the Copy SVG button icon
+   (which lives in .preview > button.secondary and keeps its own size). */
+.preview > svg,
+.preview > div svg {
+	width: 248px;
+	height: 248px;
+	display: block;
+}
+
+/* Floating punch-hole button, pinned to the QR container's top-right corner. */
+.punch-btn {
+	position: absolute;
+	top: 16px;
+	right: 16px;
+	z-index: 10;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 8px;
+	border-radius: 50%;
+	border: 0.5px solid #d7d7d7;
+	background: rgba(255, 255, 255, 0.75);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.1);
+	color: #343330;
+	cursor: pointer;
+	opacity: 0;
+	pointer-events: none;
+	transition:
+		opacity 150ms ease,
+		background 150ms ease-out,
+		color 150ms ease-out,
+		border-color 150ms ease-out;
+}
+
+/* Revealed on hover, matching the Copy/Download action row. */
+.preview:hover .punch-btn {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.punch-btn:hover:not(:disabled) {
+	background: rgba(239, 239, 239, 0.75);
+	transition: background 100ms ease-in;
+}
+
+.punch-btn:disabled {
+	cursor: default;
+	opacity: 0.6;
+}
+
+.today-counter {
+	width: fit-content;
+	margin: 32px auto 0;
+	font-size: 0.8rem;
+	color: var(--blue);
+	white-space: nowrap;
+	pointer-events: none;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.today-dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--blue);
+	flex-shrink: 0;
+	animation: dot-pulse 0.6s ease-out;
+}
+
+@keyframes dot-pulse {
+	0% {
+		transform: scale(1);
+		opacity: 1;
+	}
+	40% {
+		transform: scale(1.8);
+		opacity: 0.6;
+	}
+	100% {
+		transform: scale(1);
+		opacity: 1;
+	}
+}
+
+.today-count {
+	font-variant-numeric: tabular-nums;
+}
+
+@keyframes shake {
+	0%,
+	100% {
+		transform: translateX(0);
+	}
+	15% {
+		transform: translateX(-5px);
+	}
+	30% {
+		transform: translateX(5px);
+	}
+	45% {
+		transform: translateX(-5px);
+	}
+	60% {
+		transform: translateX(5px);
+	}
+	75% {
+		transform: translateX(-3px);
+	}
+	90% {
+		transform: translateX(3px);
+	}
+}
+
+.generate-btn.shake {
+	animation: shake 0.4s ease;
+}
+
+.domain-chip.shake {
+	animation: shake 0.4s ease;
+}
