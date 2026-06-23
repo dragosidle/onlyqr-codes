@@ -382,30 +382,30 @@ export default function App() {
 	return (
 		<>
 			<div className='above-fold'>
-			<header className='site-header'>
-				<div className='inner'>
-					<div className='header-left'>
-						<div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-							<img
-								src={trollImg}
-								alt=''
-								style={{ display: 'block', width: '72px', height: '72px' }}
-							/>
-							<p className='brand' style={{ margin: 0 }}>
-								<span style={{ color: '#02AFEF' }}>Only</span>
-								<span style={{ color: '#008CD0' }}>QR.codes</span>
+				<header className='site-header'>
+					<div className='inner'>
+						<div className='header-left'>
+							<div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+								<img
+									src={trollImg}
+									alt=''
+									style={{ display: 'block', width: '72px', height: '72px' }}
+								/>
+								<p className='brand' style={{ margin: 0 }}>
+									<span style={{ color: '#02AFEF' }}>Only</span>
+									<span style={{ color: '#008CD0' }}>QR.codes</span>
+								</p>
+							</div>
+							<h1 className='site-subtitle'>Free QR code generator for designers & developers</h1>
+							<p className='value-prop'>
+								No sign-ups, no paywall, no pointless customization, just good old SVGs.
 							</p>
 						</div>
-						<h1 className='site-subtitle'>Free QR code generator for designers & developers</h1>
-						<p className='value-prop'>
-							No sign-ups, no paywall, no pointless customization, just good old SVGs.
-						</p>
 					</div>
-				</div>
-			</header>
+				</header>
 
-			<main className='hero'>
-				<div className='app-layout'>
+				<main className='hero'>
+					<div className='app-layout'>
 						<div className='controls-col'>
 							<section className='controls'>
 								<div className='input-with-action'>
@@ -574,14 +574,14 @@ export default function App() {
 								)}
 							</AnimatePresence>
 						</div>
-				</div>
-			</main>
-			{todayCount !== null && (
-				<p className='today-counter'>
-					<span key={dotKey} className='today-dot' />
-					<NumberFlow className='today-count' value={todayCount ?? 0} /> codes generated today
-				</p>
-			)}
+					</div>
+				</main>
+				{todayCount !== null && (
+					<p className='today-counter'>
+						<span key={dotKey} className='today-dot' />
+						<NumberFlow className='today-count' value={todayCount ?? 0} /> codes generated today
+					</p>
+				)}
 			</div>
 
 			<section className='manifesto'>
@@ -625,8 +625,8 @@ export default function App() {
 						<h3 className='punch-notice-title'>Punching a hole is safe.</h3>
 						<p className='punch-notice-body'>
 							The QR is regenerated from scratch. Center modules are never drawn, not erased. QR
-							codes at high error correction (level&nbsp;H) tolerate up to 30% module loss. The
-							large hole sits exactly at that threshold, so your code scans just as reliably.
+							codes at high error correction (level&nbsp;H) tolerate up to 30% module loss. The hole
+							sits exactly at that threshold, so your code scans just as reliably.
 						</p>
 					</motion.div>
 				)}

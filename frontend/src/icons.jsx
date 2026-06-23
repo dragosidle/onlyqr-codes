@@ -10,8 +10,8 @@ export function IconLink({ size = ICON_SIZE, ...props }) {
 
 export function IconText({ size = ICON_SIZE, ...props }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-      <path d="M9 3.9375V14.0625M3.9375 6.1875V3.9375H14.0625V6.1875M6.75 14.0625H11.25" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path d="M16 13H29M16 17H29M10 21H29M10 25H29M16 9V7H4V9M8 17H12M10 7V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
 }
