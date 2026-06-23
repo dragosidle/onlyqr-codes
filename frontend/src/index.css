@@ -221,7 +221,9 @@ body {
 	opacity: 0;
 	transform: translateY(6px);
 	pointer-events: none;
-	transition: opacity 200ms ease, transform 200ms ease;
+	transition:
+		opacity 200ms ease,
+		transform 200ms ease;
 }
 
 .qr-card:not(.active):has(.preview:hover) .domain-chip,
@@ -640,13 +642,13 @@ button:disabled {
 .today-counter {
 	width: fit-content;
 	margin: 32px auto 0;
-	font-size: 0.8rem;
 	color: var(--blue);
 	white-space: nowrap;
 	pointer-events: none;
 	display: flex;
 	align-items: center;
 	gap: 6px;
+	font-size: 1rem;
 }
 
 .today-dot {
@@ -718,15 +720,14 @@ button:disabled {
 
 .manifesto .inner {
 	max-width: 560px;
-	font-weight: 400;
 }
 
 .manifesto p {
 	margin: 0 0 20px;
-	font-size: 1rem;
+	font-size: 1.2rem;
 	line-height: 1.7;
 	color: #888888;
-	font-weight: 400;
+	font-weight: 300;
 }
 
 .manifesto p:last-child {
@@ -736,4 +737,70 @@ button:disabled {
 .manifesto .manifesto-sign {
 	color: #555555;
 	font-style: italic;
+}
+
+/* Floating punch-hole disclaimer card */
+/* Mobile: centered */
+.punch-notice {
+	position: fixed;
+	bottom: 24px;
+	left: 50%;
+	/* transform is managed by framer-motion (x: -50%) */
+	z-index: 200;
+	max-width: 380px;
+	width: calc(100% - 48px);
+	padding: 18px 20px 20px;
+	background: rgba(255, 255, 255, 0.96);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+	border: 0.5px solid #d7d7d7;
+	border-radius: 16px;
+	box-shadow:
+		0 8px 32px rgba(0, 0, 0, 0.1),
+		0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Desktop: bottom-right corner */
+@media (min-width: 600px) {
+	.punch-notice {
+		left: auto;
+		right: 24px;
+		width: 340px;
+	}
+}
+
+.punch-notice-close {
+	position: absolute;
+	top: 14px;
+	right: 16px;
+	padding: 4px 10px;
+	border-radius: 999px;
+	border: 0.5px solid #d7d7d7;
+	background: #f4f4f4;
+	font-size: 12px;
+	font-weight: 500;
+	color: #555555;
+	cursor: pointer;
+	transition: background 100ms ease;
+}
+
+.punch-notice-close:hover {
+	background: #e8e8e8;
+}
+
+.punch-notice-title {
+	margin: 0 0 8px;
+	font-size: 1rem;
+	font-weight: 500;
+	color: #1a1a1a;
+	padding-right: 56px; /* clear the Close button */
+}
+
+.punch-notice-body {
+	margin: 0;
+	font-size: 13px;
+	font-weight: 400;
+	line-height: 1.6;
+	color: #666666;
+	font-size: 0.9rem;
 }

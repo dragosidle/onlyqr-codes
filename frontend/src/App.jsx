@@ -115,6 +115,18 @@ export default function App() {
 	const [shaking, setShaking] = useState(false)
 	const [shakingUrl, setShakingUrl] = useState('')
 	const [punchingUrl, setPunchingUrl] = useState('') // domain whose punch variant is being fetched
+	const [punchNoticeDismissed, setPunchNoticeDismissed] = useState(false)
+	const [isDesktop, setIsDesktop] = useState(() => window.matchMedia('(min-width: 600px)').matches)
+	useEffect(() => {
+		const mq = window.matchMedia('(min-width: 600px)')
+		const handler = (e) => setIsDesktop(e.matches)
+		mq.addEventListener('change', handler)
+		return () => mq.removeEventListener('change', handler)
+	}, [])
+
+	const [punchedThisSession, setPunchedThisSession] = useState(false)
+	const showPunchNotice = punchedThisSession && !punchNoticeDismissed
+	const dismissPunchNotice = () => setPunchNoticeDismissed(true)
 	// The centered card (falls back to the most recent domain if the stored
 	// activeUrl ever drifts out of the list).
 	const activeDomain =
@@ -251,6 +263,7 @@ export default function App() {
 		if (!d) return
 		// Already have the variant (or turning it off) — just flip the flag.
 		if (d.punched || d.svgs.punched) {
+			if (!d.punched) setPunchedThisSession(true)
 			setDomains((prev) => prev.map((x) => (x.url === url ? { ...x, punched: !x.punched } : x)))
 			return
 		}
@@ -261,6 +274,7 @@ export default function App() {
 			const res = await fetch(`/api/qr?${params.toString()}`)
 			if (!res.ok) throw new Error(`Server returned ${res.status}`)
 			const punched = await res.text()
+			setPunchedThisSession(true)
 			setDomains((prev) =>
 				prev.map((x) =>
 					x.url === url ? { ...x, svgs: { ...x.svgs, punched }, punched: true } : x,
@@ -317,8 +331,10 @@ export default function App() {
 								<span style={{ color: '#008CD0' }}>QR.codes</span>
 							</p>
 						</div>
-						<h1 className='site-subtitle'>QR codes for developers & designers</h1>
-						<p className='value-prop'>No accounts, no paywall, just good old SVGs</p>
+						<h1 className='site-subtitle'>QR codes generator for designers & developers</h1>
+						<p className='value-prop'>
+							No sign-ups, no paywall, no pointless customization, just good old SVGs.
+						</p>
 					</div>
 				</div>
 			</header>
@@ -364,108 +380,115 @@ export default function App() {
 							    suppresses the track's enter on page load (present at mount),
 							    but lets it swipe up when first added (new child). */}
 							<AnimatePresence initial={false}>
-							{!isEmpty && (
-								// Carousel track: all domain cards in a row, translated so the
-								// active (newest by default) card is centered. Generating a new
-								// domain appends a card at the right and slides the track left,
-								// so the previous one moves aside to make room.
-								<motion.div
-									key='track'
-									className='qr-track'
-									ref={trackRef}
-									initial={{ y: 40, opacity: 0 }}
-									animate={{ y: 0, opacity: 1, x: trackX }}
-									transition={{
-										y: { duration: 0.45, ease: [0.16, 1, 0.3, 1] },
-										opacity: { duration: 0.35, ease: [0.16, 1, 0.3, 1] },
-										x: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
-									}}>
-									<AnimatePresence
-										initial={false}
-										onExitComplete={() => {
-											requestAnimationFrame(() => centerFnRef.current())
-											if (domains.length === 0) setIsEmpty(true)
+								{!isEmpty && (
+									// Carousel track: all domain cards in a row, translated so the
+									// active (newest by default) card is centered. Generating a new
+									// domain appends a card at the right and slides the track left,
+									// so the previous one moves aside to make room.
+									<motion.div
+										key='track'
+										className='qr-track'
+										ref={trackRef}
+										initial={{ y: 40, opacity: 0 }}
+										animate={{ y: 0, opacity: 1, x: trackX }}
+										transition={{
+											y: { duration: 0.45, ease: [0.16, 1, 0.3, 1] },
+											opacity: { duration: 0.35, ease: [0.16, 1, 0.3, 1] },
+											x: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
 										}}>
-										{domains.map((d) => {
-											const punched = !!(d.punched && d.svgs.punched)
-											const svg = punched ? d.svgs.punched : d.svgs.none
-											const isActive = activeDomain?.url === d.url
-											return (
-												<motion.div
-													key={d.url}
-													ref={(el) => {
-														if (el) cardRefs.current[d.url] = el
-														else delete cardRefs.current[d.url]
-													}}
-													className={`qr-card${isActive ? ' active' : ''}`}
-													initial={{ opacity: 0, scale: 0.9 }}
-													animate={{ opacity: 1, scale: isActive ? 1 : 0.9 }}
-													exit={{ opacity: 0, scale: 0.9 }}
-													transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-													onClick={() => !isActive && setActiveUrl(d.url)}>
-													<div className='chip-row'>
-														<button
-															type='button'
-															className={`domain-chip${shakingUrl === d.url ? ' shake' : ''}`}
-															onClick={() => setActiveUrl(d.url)}
-															onAnimationEnd={(e) => {
-																if (e.animationName === 'shake') setShakingUrl('')
-															}}>
-															{(() => {
-																const TypeIcon = QR_TYPES.find((t) => t.label === (d.type ?? 'Link'))?.Icon
-																return TypeIcon ? <TypeIcon size={14} style={{ flexShrink: 0 }} /> : null
-															})()}
-															{d.type === 'Link' || !d.type ? displayUrl(d.url) : d.url}
-														</button>
-														<button
-															type='button'
-															className='chip-delete'
-															onClick={(e) => {
-																e.stopPropagation()
-																deleteDomain(d.url)
-															}}
-															title='Delete'
-															aria-label='Delete QR code'
-															data-visitors-event="chip-delete">
-															<IconDelete size={18} />
-														</button>
-													</div>
+										<AnimatePresence
+											initial={false}
+											onExitComplete={() => {
+												requestAnimationFrame(() => centerFnRef.current())
+												if (domains.length === 0) setIsEmpty(true)
+											}}>
+											{domains.map((d) => {
+												const punched = !!(d.punched && d.svgs.punched)
+												const svg = punched ? d.svgs.punched : d.svgs.none
+												const isActive = activeDomain?.url === d.url
+												return (
+													<motion.div
+														key={d.url}
+														ref={(el) => {
+															if (el) cardRefs.current[d.url] = el
+															else delete cardRefs.current[d.url]
+														}}
+														className={`qr-card${isActive ? ' active' : ''}`}
+														initial={{ opacity: 0, scale: 0.9 }}
+														animate={{ opacity: 1, scale: isActive ? 1 : 0.9 }}
+														exit={{ opacity: 0, scale: 0.9 }}
+														transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+														onClick={() => !isActive && setActiveUrl(d.url)}>
+														<div className='chip-row'>
+															<button
+																type='button'
+																className={`domain-chip${shakingUrl === d.url ? ' shake' : ''}`}
+																onClick={() => setActiveUrl(d.url)}
+																onAnimationEnd={(e) => {
+																	if (e.animationName === 'shake') setShakingUrl('')
+																}}>
+																{(() => {
+																	const TypeIcon = QR_TYPES.find(
+																		(t) => t.label === (d.type ?? 'Link'),
+																	)?.Icon
+																	return TypeIcon ? (
+																		<TypeIcon size={14} style={{ flexShrink: 0 }} />
+																	) : null
+																})()}
+																{d.type === 'Link' || !d.type ? displayUrl(d.url) : d.url}
+															</button>
+															<button
+																type='button'
+																className='chip-delete'
+																onClick={(e) => {
+																	e.stopPropagation()
+																	deleteDomain(d.url)
+																}}
+																title='Delete'
+																aria-label='Delete QR code'
+																data-visitors-event='chip-delete'>
+																<IconDelete size={18} />
+															</button>
+														</div>
 
-													<div className='preview'>
-														<div dangerouslySetInnerHTML={{ __html: svg }} />
+														<div className='preview'>
+															<div dangerouslySetInnerHTML={{ __html: svg }} />
+
+															<button
+																className='punch-btn'
+																onClick={() => togglePunch(d.url)}
+																disabled={punchingUrl === d.url}
+																aria-pressed={punched}
+																aria-label={punched ? 'Remove punch hole' : 'Punch a hole'}
+																title={punched ? 'Remove punch hole' : 'Punch a hole'}
+																data-visitors-event='punch-btn'>
+																{punched ? <IconPunchActive /> : <IconPunch />}
+															</button>
+
+															<button
+																className='qr-download'
+																onClick={() => downloadSvg(svg, punched ? 'qr-punched' : 'qr')}
+																title='Download SVG'
+																aria-label='Download SVG'
+																data-visitors-event='qr-download'>
+																<IconDownload />
+																Download
+															</button>
+														</div>
 
 														<button
-															className='punch-btn'
-															onClick={() => togglePunch(d.url)}
-															disabled={punchingUrl === d.url}
-															aria-pressed={punched}
-															aria-label={punched ? 'Remove punch hole' : 'Punch a hole'}
-															title={punched ? 'Remove punch hole' : 'Punch a hole'}
-															data-visitors-event="punch-btn">
-															{punched ? <IconPunchActive /> : <IconPunch />}
+															className='secondary copy-svg-btn'
+															onClick={() => copySvg(svg)}
+															data-visitors-event='copy-svg-btn'>
+															<IconCopy />
+															Copy SVG
 														</button>
-
-														<button
-															className='qr-download'
-															onClick={() => downloadSvg(svg, punched ? 'qr-punched' : 'qr')}
-															title='Download SVG'
-															aria-label='Download SVG'
-															data-visitors-event="qr-download">
-															<IconDownload />
-															Download
-														</button>
-													</div>
-
-													<button className='secondary copy-svg-btn' onClick={() => copySvg(svg)} data-visitors-event="copy-svg-btn">
-														<IconCopy />
-														Copy SVG
-													</button>
-												</motion.div>
-											)
-										})}
-									</AnimatePresence>
-								</motion.div>
-							)}
+													</motion.div>
+												)
+											})}
+										</AnimatePresence>
+									</motion.div>
+								)}
 							</AnimatePresence>
 							<AnimatePresence initial={false}>
 								{isEmpty && (
@@ -519,6 +542,27 @@ export default function App() {
 					</p>
 				</div>
 			</section>
+
+			<AnimatePresence>
+				{showPunchNotice && (
+					<motion.div
+						className='punch-notice'
+						initial={{ x: isDesktop ? 0 : '-50%', y: 24, opacity: 0 }}
+						animate={{ x: isDesktop ? 0 : '-50%', y: 0, opacity: 1 }}
+						exit={{ x: isDesktop ? 0 : '-50%', y: 24, opacity: 0 }}
+						transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}>
+						<button className='punch-notice-close' onClick={dismissPunchNotice}>
+							Close
+						</button>
+						<h3 className='punch-notice-title'>Punching a hole is safe.</h3>
+						<p className='punch-notice-body'>
+							The QR is regenerated from scratch. Center modules are never drawn, not erased. QR
+							codes at high error correction (level&nbsp;H) tolerate up to 30% module loss. The
+							large hole sits exactly at that threshold, so your code scans just as reliably.
+						</p>
+					</motion.div>
+				)}
+			</AnimatePresence>
 		</>
 	)
 }
