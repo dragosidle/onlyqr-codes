@@ -20,6 +20,7 @@ import {
 import GenerateButton from './GenerateButton'
 import ClearButton from './ClearButton'
 import trollImg from './troll.avif' // bundled by Vite -> correct hashed URL in dev & prod
+import aliDittherImg from './ali-ditther.avif'
 
 // Persisted multi-domain history. Each entry is
 //   { url, svgs: { none, punched? }, punched: boolean }
@@ -747,6 +748,7 @@ export default function App() {
 							codes at high error correction (level&nbsp;H) tolerate up to 30% module loss. The hole
 							sits exactly at that threshold, so your code scans just as reliably.
 						</p>
+						<img src={aliDittherImg} alt='' className='punch-notice-image' />
 					</motion.div>
 				)}
 			</AnimatePresence>

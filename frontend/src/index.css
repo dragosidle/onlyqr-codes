@@ -971,3 +971,10 @@ button.chip-delete {
 	font-size: 0.9rem;
 	text-wrap: pretty;
 }
+
+.punch-notice-image {
+	display: block;
+	width: 100%;
+	margin-top: 14px;
+	border-radius: 8px;
+}
