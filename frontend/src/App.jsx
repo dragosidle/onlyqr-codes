@@ -168,8 +168,8 @@ export default function App() {
 
 	// Re-center whenever the active card or the number of cards changes — except
 	// on deletion: the removed card is still mid-exit, so measuring now is stale
-	// and would cause a double move. The ResizeObserver below re-centers once it
-	// actually unmounts (a single, clean slide to center).
+	// and would cause a double move. onExitComplete + ResizeObserver re-center
+	// once the card has fully unmounted (a single, clean slide to center).
 	const prevLenRef = useRef(domains.length)
 	useLayoutEffect(() => {
 		const shrank = domains.length < prevLenRef.current
@@ -378,7 +378,9 @@ export default function App() {
 									ref={trackRef}
 									animate={{ x: trackX }}
 									transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}>
-									<AnimatePresence initial={false}>
+									<AnimatePresence
+										initial={false}
+										onExitComplete={() => requestAnimationFrame(() => centerFnRef.current())}>
 										{domains.map((d) => {
 											const punched = !!(d.punched && d.svgs.punched)
 											const svg = punched ? d.svgs.punched : d.svgs.none
