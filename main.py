@@ -75,6 +75,8 @@ async def generate_qr(
     hole: str | None = Query(None, pattern="^(small|medium|large)$"),
     shape: str = Query("square", pattern="^(square|circle)$"),
 ):
+    if not url.startswith(("http://", "https://")):
+        url = "https://" + url
     svg = build_svg_cached(url, hole, shape)
     await _increment_daily_counter()
     headers = {
