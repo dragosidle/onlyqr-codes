@@ -746,7 +746,7 @@ export default function App() {
 						<p className='punch-notice-body'>
 							The QR is regenerated from scratch. Center modules are never drawn, not erased. QR
 							codes at high error correction (level&nbsp;H) tolerate up to 30% module loss. The hole
-							sits exactly at that threshold, so your code scans just as reliably.
+							sits well within that threshold, so your code scans just as reliably.
 						</p>
 						<img src={aliDittherImg} alt='' className='punch-notice-image' />
 					</motion.div>
