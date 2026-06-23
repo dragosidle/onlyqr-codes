@@ -153,6 +153,10 @@ body {
 	white-space: nowrap;
 }
 
+.type-tab:hover {
+	color: #0f1115;
+}
+
 .type-tab.active {
 	color: #0f1115;
 	cursor: default;
@@ -391,6 +395,16 @@ body {
 		box-shadow 100ms ease;
 }
 
+.input-with-action.full-width {
+	width: 100%;
+	margin: 0;
+}
+
+.input-with-action.full-width input {
+	flex: 1 1 0;
+	min-width: 0;
+}
+
 .input-with-action:focus-within {
 	background: #fff;
 	border-bottom-color: #e8e8e8;
@@ -448,6 +462,10 @@ body {
 .input-with-action input::placeholder {
 	opacity: 0.3;
 	user-select: none;
+}
+
+.input-with-action.full-width input::placeholder {
+	font-style: italic;
 }
 
 .input-with-action input:-webkit-autofill,

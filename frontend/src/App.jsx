@@ -63,6 +63,12 @@ function stripDiacritics(text) {
 	return text.normalize('NFD').replace(/[̀-ͯ]/g, '')
 }
 
+function midTruncate(str, max = 35) {
+	if (str.length <= max) return str
+	const half = Math.floor((max - 1) / 2)
+	return str.slice(0, half) + '…' + str.slice(str.length - (max - 1 - half))
+}
+
 function displayUrl(url) {
 	const bare = url.replace(/^https:\/\//, '')
 	const firstSlash = bare.indexOf('/')
@@ -408,7 +414,21 @@ export default function App() {
 					<div className='app-layout'>
 						<div className='controls-col'>
 							<section className='controls'>
-								<div className='input-with-action'>
+								<div className='type-tabs'>
+									<div className='type-tab-indicator' style={indicatorStyle} />
+									{QR_TYPES.map(({ label, Icon }, i) => (
+										<button
+											key={label}
+											ref={(el) => (tabRefs.current[i] = el)}
+											className={`type-tab${qrType === label ? ' active' : ''}`}
+											onClick={() => setQrType(label)}>
+											<Icon size={16} />
+											{label}
+										</button>
+									))}
+								</div>
+
+								<div className={`input-with-action${qrType === 'Text' ? ' full-width' : ''}`}>
 									<span ref={sizerRef} className='input-sizer' aria-hidden='true'>
 										{text || 'domain.com'}
 									</span>
@@ -416,7 +436,7 @@ export default function App() {
 										type='text'
 										name='url'
 										value={text}
-										placeholder='domain.com'
+										placeholder={qrType === 'Text' ? 'You forget a thousand things everyday, pal.' : 'domain.com'}
 										style={inputWidth ? { width: `${inputWidth}px` } : undefined}
 										onChange={(e) => {
 											let v = stripDiacritics(e.target.value)
@@ -501,7 +521,7 @@ export default function App() {
 																		<TypeIcon size={14} style={{ flexShrink: 0 }} />
 																	) : null
 																})()}
-																{d.type === 'Link' || !d.type ? displayUrl(d.url) : d.url}
+																{d.type === 'Link' || !d.type ? displayUrl(d.url) : midTruncate(d.url)}
 															</button>
 															<button
 																type='button'
