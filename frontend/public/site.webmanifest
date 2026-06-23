@@ -1,6 +1,9 @@
 {
-  "name": "OnlyQR",
+  "name": "OnlyQR — Free SVG QR Code Generator",
   "short_name": "OnlyQR",
+  "description": "Generate clean SVG QR codes instantly. No account, no paywall.",
+  "start_url": "/",
+  "scope": "/",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
@@ -16,6 +19,6 @@
     }
   ],
   "theme_color": "#ffffff",
-  "background_color": "#ffffff",
+  "background_color": "#f6f6f6",
   "display": "standalone"
 }
