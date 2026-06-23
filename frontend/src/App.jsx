@@ -81,6 +81,21 @@ export default function App() {
 	}, [qrType])
 
 	const [text, setText] = useState('')
+	// Auto-size the URL input to its content: a hidden sizer span mirrors the
+	// text (or placeholder), and we set the input width from its measurement so
+	// the pill grows with what's typed and pushes the Generate button along.
+	const sizerRef = useRef(null)
+	const [inputWidth, setInputWidth] = useState(null)
+	useLayoutEffect(() => {
+		const el = sizerRef.current
+		if (!el) return
+		// Sizer width + the input's horizontal padding (32px left, 12px right)
+		// + a few px so the caret never clips. The container's max-width caps the
+		// overall pill, after which the input shrinks and scrolls internally.
+		const PADDING = 44
+		const CARET = 6
+		setInputWidth(el.offsetWidth + PADDING + CARET)
+	}, [text])
 	const [domains, setDomains] = useState(loadDomains)
 	const [activeUrl, setActiveUrl] = useState(loadActiveUrl)
 	const [loading, setLoading] = useState(false)
@@ -313,11 +328,15 @@ export default function App() {
 						<div className='controls-col'>
 							<section className='controls'>
 								<div className='input-with-action'>
+									<span ref={sizerRef} className='input-sizer' aria-hidden='true'>
+										{text || 'domain.com'}
+									</span>
 									<input
 										type='text'
 										name='url'
 										value={text}
 										placeholder='domain.com'
+										style={inputWidth ? { width: `${inputWidth}px` } : undefined}
 										onChange={(e) => setText(e.target.value)}
 										onKeyDown={(e) => e.key === 'Enter' && generate()}
 										maxLength={500}

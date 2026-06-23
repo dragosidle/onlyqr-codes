@@ -163,7 +163,9 @@ body {
 
 .controls-col {
 	width: 100%;
-	max-width: 480px;
+	/* Full app-layout width so the input pill can stretch to the edges; the pill
+	   itself stays centered (margin: 0 auto) and only grows with its content. */
+	max-width: 100%;
 	min-width: 0;
 }
 
@@ -286,6 +288,7 @@ body {
 .controls {
 	display: flex;
 	flex-direction: column;
+	justify-content: center;
 	gap: 16px;
 }
 
@@ -293,7 +296,12 @@ body {
 	position: relative;
 	display: flex;
 	align-items: center;
-	min-width: 120px;
+	/* Size to content so the pill grows with the input and never exceeds the
+	column. The input's measured width drives the growth; max-width caps it. */
+	width: fit-content;
+	margin: 0 auto;
+	max-width: 100%;
+	min-width: 160px !important;
 	border-radius: 100px;
 	border: 1px solid #e8e8e8;
 	background: var(--input-bg);
@@ -314,7 +322,11 @@ body {
 }
 
 .input-with-action input {
-	flex: 1;
+	/* Width is set inline from the sizer measurement so the field tracks its
+	   content. It may shrink (and scroll internally) once the pill is capped. */
+	flex: 0 1 auto;
+	max-width: 100%;
+	min-width: 150px !important;
 	padding: 16px 12px 16px 32px;
 	border: none;
 	background: transparent;
@@ -322,8 +334,21 @@ body {
 	color: #111111;
 	font-size: 19px;
 	font-weight: 400;
-	/* min-width: 120px; */
 	outline: none;
+	transition: width 90ms ease;
+}
+
+/* Hidden mirror of the input text used only to measure content width. Must
+   match the input's font metrics exactly. white-space: pre preserves spaces. */
+.input-sizer {
+	position: absolute;
+	left: 0;
+	top: 0;
+	visibility: hidden;
+	pointer-events: none;
+	white-space: pre;
+	font-size: 19px;
+	font-weight: 400;
 }
 
 .input-prefix {
