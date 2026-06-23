@@ -58,6 +58,10 @@ function normalizeUrl(text) {
 	return text.includes('://') ? text : 'https://' + text
 }
 
+function stripDiacritics(text) {
+	return text.normalize('NFD').replace(/[̀-ͯ]/g, '')
+}
+
 function displayUrl(url) {
 	return url.replace(/^https:\/\//, '')
 }
@@ -337,7 +341,7 @@ export default function App() {
 										value={text}
 										placeholder='domain.com'
 										style={inputWidth ? { width: `${inputWidth}px` } : undefined}
-										onChange={(e) => setText(e.target.value)}
+										onChange={(e) => setText(stripDiacritics(e.target.value))}
 										onKeyDown={(e) => e.key === 'Enter' && generate()}
 										maxLength={500}
 									/>

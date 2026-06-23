@@ -349,6 +349,7 @@ body {
 	white-space: pre;
 	font-size: 19px;
 	font-weight: 400;
+	min-width: 150px;
 }
 
 .input-prefix {
