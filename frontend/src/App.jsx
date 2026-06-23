@@ -84,7 +84,8 @@ export default function App() {
 
 	// The centered card (falls back to the most recent domain if the stored
 	// activeUrl ever drifts out of the list).
-	const activeDomain = domains.find((d) => d.url === activeUrl) || domains[domains.length - 1] || null
+	const activeDomain =
+		domains.find((d) => d.url === activeUrl) || domains[domains.length - 1] || null
 
 	// Reveal the focused card's delete button, then auto-hide it after 3s.
 	const revealDelete = () => {
@@ -235,7 +236,9 @@ export default function App() {
 			if (!res.ok) throw new Error(`Server returned ${res.status}`)
 			const punched = await res.text()
 			setDomains((prev) =>
-				prev.map((x) => (x.url === url ? { ...x, svgs: { ...x.svgs, punched }, punched: true } : x)),
+				prev.map((x) =>
+					x.url === url ? { ...x, svgs: { ...x.svgs, punched }, punched: true } : x,
+				),
 			)
 		} catch (e) {
 			setError(e.message || 'Something went wrong.')
@@ -369,7 +372,6 @@ export default function App() {
 													transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
 													onClick={() => !isActive && setActiveUrl(d.url)}
 													onMouseEnter={isActive ? revealDelete : undefined}>
-
 													<div className='chip-row'>
 														<button
 															type='button'
@@ -408,20 +410,17 @@ export default function App() {
 															{punched ? <IconPunchActive /> : <IconPunch />}
 														</button>
 
-
-															<button
-																className='qr-download'
-																onClick={() => downloadSvg(svg, punched ? 'qr-punched' : 'qr')}
-																title='Download SVG'
-																aria-label='Download SVG'>
-																<IconDownload />
-																Download
-															</button>
+														<button
+															className='qr-download'
+															onClick={() => downloadSvg(svg, punched ? 'qr-punched' : 'qr')}
+															title='Download SVG'
+															aria-label='Download SVG'>
+															<IconDownload />
+															Download
+														</button>
 													</div>
 
-													<button
-														className='secondary copy-svg-btn'
-														onClick={() => copySvg(svg)}>
+													<button className='secondary copy-svg-btn' onClick={() => copySvg(svg)}>
 														<IconCopy />
 														Copy SVG
 													</button>
@@ -448,6 +447,33 @@ export default function App() {
 					)}
 				</div>
 			</main>
+
+			<section className='manifesto'>
+				<div className='inner'>
+					<p>
+						Most QR code tools have lost the plot. They want you to create an account, host your
+						files, track your scans, and pick from seventeen color schemes. That's not a QR
+						generator, that's a platform trying to lock you in.
+					</p>
+					<p>This tool does one thing: it takes a string and turns it into a QR code. That's it.</p>
+					<p>
+						No sign-up. No file hosting. No analytics. No PNG, no JPG, no "premium export." Just a
+						clean SVG file. The only format a designer or developer actually needs. Scalable to any
+						size, ready to drop straight into Figma, Illustrator, or your codebase.
+					</p>
+					<p>
+						The QR code itself is generated the way it was meant to look: sharp, square dots on a
+						clean grid. Rounded dots are a design trend that serves no one. They don't improve
+						scannability, they don't make the code more legible, and they certainly don't make it
+						more "on brand." A QR code is a machine-readable pattern, not a mood board. Rounding the
+						corners is just visual noise dressed up as customization.
+					</p>
+					<p className='manifesto-sign'>
+						Old school by design, because a QR code is a simple thing, and simple things deserve
+						simple tools.
+					</p>
+				</div>
+			</section>
 		</>
 	)
 }

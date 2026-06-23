@@ -676,3 +676,30 @@ button:disabled {
 .domain-chip.shake {
 	animation: shake 0.4s ease;
 }
+
+.manifesto {
+	width: 100%;
+	padding: 80px 24px 100px;
+	border-top: 1px solid #e8e8e8;
+}
+
+.manifesto .inner {
+	max-width: 560px;
+}
+
+.manifesto p {
+	margin: 0 0 20px;
+	font-size: 1rem;
+	line-height: 1.7;
+	color: #888888;
+	font-weight: 400;
+}
+
+.manifesto p:last-child {
+	margin-bottom: 0;
+}
+
+.manifesto .manifesto-sign {
+	color: #555555;
+	font-style: italic;
+}
