@@ -310,9 +310,12 @@ export default function App() {
 		}
 	}
 
-	const copySvg = (svg) => {
+	const copySvg = (svg, name) => {
 		if (!svg) return
-		navigator.clipboard.writeText(svg)
+		const named = svg
+			.replace(/^<svg\b/, `<svg id="${name}"`)
+			.replace(/^(<svg\b[^>]*>)/, `$1<title>${name}</title>`)
+		navigator.clipboard.writeText(named)
 	}
 
 	const buildFilename = (d, punched) => {
@@ -511,7 +514,7 @@ export default function App() {
 
 														<button
 															className='secondary copy-svg-btn'
-															onClick={() => copySvg(svg)}
+															onClick={() => copySvg(svg, buildFilename(d, punched))}
 															data-visitors-event='copy-svg-btn'>
 															<IconCopy />
 															Copy SVG
