@@ -302,23 +302,6 @@ export default function App() {
 				<div className='inner'>
 					<div className='app-layout'>
 						<div className='controls-col'>
-							<div className='type-tabs'>
-								<div className='type-tab-indicator' style={indicatorStyle} />
-								{QR_TYPES.map(({ label, Icon }, i) => {
-									const isDisabled = label !== 'Link'
-									return (
-										<button
-											key={label}
-											ref={(el) => (tabRefs.current[i] = el)}
-											className={`type-tab${qrType === label ? ' active' : ''}${isDisabled ? ' disabled' : ''}`}
-											onClick={() => !isDisabled && setQrType(label)}
-											disabled={isDisabled}>
-											<Icon size={18} />
-											{label}
-										</button>
-									)
-								})}
-							</div>
 							<section className='controls'>
 								<div className='input-with-action'>
 									<input
