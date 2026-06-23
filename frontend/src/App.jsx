@@ -377,16 +377,26 @@ export default function App() {
 						</div>
 
 						<div className='qr-row'>
-							{!isEmpty ? (
+							{/* AnimatePresence is always mounted so initial={false} only
+							    suppresses the track's enter on page load (present at mount),
+							    but lets it swipe up when first added (new child). */}
+							<AnimatePresence initial={false}>
+							{!isEmpty && (
 								// Carousel track: all domain cards in a row, translated so the
 								// active (newest by default) card is centered. Generating a new
 								// domain appends a card at the right and slides the track left,
 								// so the previous one moves aside to make room.
 								<motion.div
+									key='track'
 									className='qr-track'
 									ref={trackRef}
-									animate={{ x: trackX }}
-									transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}>
+									initial={{ y: 40, opacity: 0 }}
+									animate={{ y: 0, opacity: 1, x: trackX }}
+									transition={{
+										y: { duration: 0.45, ease: [0.16, 1, 0.3, 1] },
+										opacity: { duration: 0.35, ease: [0.16, 1, 0.3, 1] },
+										x: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
+									}}>
 									<AnimatePresence
 										initial={false}
 										onExitComplete={() => {
@@ -475,7 +485,9 @@ export default function App() {
 										})}
 									</AnimatePresence>
 								</motion.div>
-							) : (
+							)}
+							</AnimatePresence>
+							{isEmpty && (
 								<div className='qr-col'>
 									<div className='preview'>
 										<IllustrationQRPlaceholder style={{ opacity: 0.25 }} />
