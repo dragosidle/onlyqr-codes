@@ -315,6 +315,26 @@ export default function App() {
 		navigator.clipboard.writeText(svg)
 	}
 
+	const buildFilename = (d, punched) => {
+		let base
+		if (d.type === 'Link') {
+			try {
+				const hostname = new URL(d.url).hostname.replace(/^www\./, '')
+				base = hostname.includes('.') ? hostname.slice(0, hostname.lastIndexOf('.')) : hostname
+			} catch {
+				base = 'qr'
+			}
+		} else {
+			base =
+				d.url
+					.slice(0, 24)
+					.toLowerCase()
+					.replace(/[^a-z0-9]+/g, '-')
+					.replace(/^-+|-+$/g, '') || 'qr'
+		}
+		return punched ? `${base}-punched` : base
+	}
+
 	const downloadSvg = (svg, name) => {
 		if (!svg) return
 		const blob = new Blob([svg], { type: 'image/svg+xml' })
@@ -480,7 +500,7 @@ export default function App() {
 
 															<button
 																className='qr-download'
-																onClick={() => downloadSvg(svg, punched ? 'qr-punched' : 'qr')}
+																onClick={() => downloadSvg(svg, buildFilename(d, punched))}
 																title='Download SVG'
 																aria-label='Download SVG'
 																data-visitors-event='qr-download'>
