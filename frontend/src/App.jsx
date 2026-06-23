@@ -59,7 +59,9 @@ function isValidLinkUrl(text) {
 }
 
 function normalizeUrl(text) {
-	return text.includes('://') ? text : 'https://' + text
+	const withProto = text.includes('://') ? text : 'https://' + text
+	// Lowercase the hostname only; path may be case-sensitive
+	return withProto.replace(/^(https?:\/\/)([^/?#]+)/i, (_, proto, host) => proto + host.toLowerCase())
 }
 
 function stripDiacritics(text) {
