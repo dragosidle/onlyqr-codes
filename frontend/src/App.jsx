@@ -15,6 +15,7 @@ import {
 	IconDelete,
 } from './icons'
 import GenerateButton from './GenerateButton'
+import trollImg from './troll.avif' // bundled by Vite -> correct hashed URL in dev & prod
 
 // Persisted multi-domain history. Each entry is
 //   { url, svgs: { none, punched? }, punched: boolean }
@@ -282,7 +283,7 @@ export default function App() {
 					<div className='header-left'>
 						<div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
 							<img
-								src='/src/troll.avif'
+								src={trollImg}
 								alt=''
 								style={{ display: 'block', width: '72px', height: '72px' }}
 							/>
