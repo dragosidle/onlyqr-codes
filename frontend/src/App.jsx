@@ -393,7 +393,8 @@ export default function App() {
 																deleteDomain(d.url)
 															}}
 															title='Delete'
-															aria-label='Delete QR code'>
+															aria-label='Delete QR code'
+															data-visitors-event="chip-delete">
 															<IconDelete size={18} />
 														</button>
 													</div>
@@ -407,7 +408,8 @@ export default function App() {
 															disabled={punchingUrl === d.url}
 															aria-pressed={punched}
 															aria-label={punched ? 'Remove punch hole' : 'Punch a hole'}
-															title={punched ? 'Remove punch hole' : 'Punch a hole'}>
+															title={punched ? 'Remove punch hole' : 'Punch a hole'}
+															data-visitors-event="punch-btn">
 															{punched ? <IconPunchActive /> : <IconPunch />}
 														</button>
 
@@ -415,13 +417,14 @@ export default function App() {
 															className='qr-download'
 															onClick={() => downloadSvg(svg, punched ? 'qr-punched' : 'qr')}
 															title='Download SVG'
-															aria-label='Download SVG'>
+															aria-label='Download SVG'
+															data-visitors-event="qr-download">
 															<IconDownload />
 															Download
 														</button>
 													</div>
 
-													<button className='secondary copy-svg-btn' onClick={() => copySvg(svg)}>
+													<button className='secondary copy-svg-btn' onClick={() => copySvg(svg)} data-visitors-event="copy-svg-btn">
 														<IconCopy />
 														Copy SVG
 													</button>
