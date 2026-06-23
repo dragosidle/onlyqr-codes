@@ -77,8 +77,13 @@ def build_svg(text: str, hole_ratio: float | None, hole_shape: str = "square") -
     hole_ratio: fraction of width for the centre hole (e.g. 0.22), or None for no hole.
     hole_shape: "square" or "circle".
     Returns the SVG document as a string.
+
+    Error correction follows the hole: a plain QR uses level L (smallest,
+    densest), while a punched QR uses level H so the centre hole stays
+    recoverable.
     """
-    qr = segno.make(text, error="h")
+    error = "h" if hole_ratio is not None else "l"
+    qr = segno.make(text, error=error)
     matrix = qr.matrix
     rows = len(matrix)
     cols = len(matrix[0])
