@@ -487,13 +487,20 @@ export default function App() {
 								</motion.div>
 							)}
 							</AnimatePresence>
-							{isEmpty && (
-								<div className='qr-col'>
-									<div className='preview'>
-										<IllustrationQRPlaceholder style={{ opacity: 0.25 }} />
-									</div>
-								</div>
-							)}
+							<AnimatePresence initial={false}>
+								{isEmpty && (
+									<motion.div
+										key='placeholder'
+										className='qr-col'
+										initial={{ scale: 0.8, opacity: 0 }}
+										animate={{ scale: 1, opacity: 1 }}
+										transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}>
+										<div className='preview'>
+											<IllustrationQRPlaceholder style={{ opacity: 0.25 }} />
+										</div>
+									</motion.div>
+								)}
+							</AnimatePresence>
 						</div>
 					</div>
 
