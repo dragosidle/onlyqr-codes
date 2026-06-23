@@ -545,6 +545,7 @@ button:disabled {
    In-flow next to the chip so the pair is centered together.
    Only visible on the focused card. */
 .chip-delete {
+	align-self: stretch;
 	aspect-ratio: 1;
 	display: flex;
 	align-items: center;
