@@ -18,6 +18,9 @@ frontend/dist/
 # Playwright MCP session data
 .playwright-mcp/
 
+# Claude Code local session data
+.claude/
+
 # Secrets / local config
 .env
 .env.*
