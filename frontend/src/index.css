@@ -224,7 +224,8 @@ body {
 	transition: opacity 200ms ease, transform 200ms ease;
 }
 
-.qr-card:not(.active):hover .domain-chip {
+.qr-card:not(.active):has(.preview:hover) .domain-chip,
+.qr-card:not(.active):has(.domain-chip:hover) .domain-chip {
 	opacity: 1;
 	transform: translateY(0);
 	pointer-events: auto;
