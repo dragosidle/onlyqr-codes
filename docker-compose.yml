@@ -1,12 +1,25 @@
-# Default compose file — dev stack.
-# Bare `docker compose` commands (up, down, logs, ps) all use this.
-# Production: docker compose -f docker-compose.prod.yml up --build -d
+# OnlyQR — the one compose file. Same app, two modes:
+#
+#   dev   docker compose build dev     docker compose up            # hot reload, open http://localhost:5173
+#   prod  docker compose build prod    docker compose up prod -d    # public app,  http://127.0.0.1:8000
+#
+# Both build the same app (frontend + FastAPI backend + /api/qr + the daily
+# QR-generation counter). The difference is only how it runs:
+#   - dev  -> Dockerfile.dev, uvicorn --reload + Vite, source bind-mounted, ports open.
+#   - prod -> Dockerfile (prod target), gunicorn serves the BUILT React app + API from
+#             one container, bound to localhost (a shared reverse proxy is the public edge).
+#
+# `prod` sits behind a profile so a bare `docker compose up` stays on dev; naming it
+# explicitly (`build prod` / `up prod`) brings it in. Both modes share Valkey, whose
+# named volume persists the QR counts.
 
 services:
   valkey:
     image: valkey/valkey:8-alpine
-    container_name: onlyqr-valkey-dev
+    container_name: onlyqr-valkey
     restart: unless-stopped
+    volumes:
+      - valkey-data:/data # persist the daily QR-generation counts across restarts
 
   dev:
     build:
@@ -17,11 +30,29 @@ services:
       - "8000:8000"
       - "5173:5173"
     volumes:
-      - .:/app
-      - /app/frontend/node_modules
+      - .:/app # live source for both backend + frontend reload
+      - /app/frontend/node_modules # keep the image's linux deps (don't shadow with host)
     environment:
       - ENV=development
-      - VITE_USE_POLLING=true
+      - VITE_USE_POLLING=true # FS-event polling so HMR fires on bind mounts (macOS/Windows)
       - REDIS_URL=redis://valkey:6379
     depends_on:
       - valkey
+
+  prod:
+    profiles: ["prod"] # excluded from a bare `docker compose up`; enabled when named explicitly
+    build:
+      context: .
+      target: prod # multi-stage Dockerfile: Node builds the React app, gunicorn serves app + API
+    container_name: onlyqr-codes-prod
+    restart: always
+    ports:
+      - "127.0.0.1:8000:8000" # localhost only — a shared reverse proxy is the public entry point
+    environment:
+      - ENV=production
+      - REDIS_URL=redis://valkey:6379
+    depends_on:
+      - valkey
+
+volumes:
+  valkey-data:
