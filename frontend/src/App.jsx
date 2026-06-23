@@ -469,7 +469,7 @@ export default function App() {
 						more "on brand." A QR code is a machine-readable pattern, not a mood board. Rounding the
 						corners is just visual noise dressed up as customization.
 					</p>
-					<p className='manifesto-sign'>
+					<p>
 						Old school by design, because a QR code is a simple thing, and simple things deserve
 						simple tools.
 					</p>
