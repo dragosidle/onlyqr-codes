@@ -368,6 +368,7 @@ body {
 
 .input-with-action input::placeholder {
 	opacity: 0.3;
+	user-select: none;
 }
 
 .input-with-action input:-webkit-autofill,
