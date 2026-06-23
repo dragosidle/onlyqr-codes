@@ -19,6 +19,7 @@ import {
 	IconDelete,
 } from './icons'
 import GenerateButton from './GenerateButton'
+import ClearButton from './ClearButton'
 import trollImg from './troll.avif' // bundled by Vite -> correct hashed URL in dev & prod
 
 // Persisted multi-domain history. Each entry is
@@ -61,7 +62,10 @@ function isValidLinkUrl(text) {
 function normalizeUrl(text) {
 	const withProto = text.includes('://') ? text : 'https://' + text
 	// Lowercase the hostname only; path may be case-sensitive
-	return withProto.replace(/^(https?:\/\/)([^/?#]+)/i, (_, proto, host) => proto + host.toLowerCase())
+	return withProto.replace(
+		/^(https?:\/\/)([^/?#]+)/i,
+		(_, proto, host) => proto + host.toLowerCase(),
+	)
 }
 
 function stripDiacritics(text) {
@@ -390,7 +394,11 @@ export default function App() {
 			}
 		} else if (d.type === 'Wifi') {
 			const ssid = extractWifiSsid(d.url)
-			base = ssid.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'wifi'
+			base =
+				ssid
+					.toLowerCase()
+					.replace(/[^a-z0-9]+/g, '-')
+					.replace(/^-+|-+$/g, '') || 'wifi'
 		} else {
 			base =
 				d.url
@@ -485,6 +493,15 @@ export default function App() {
 												shaking={shaking}
 												onShakeEnd={() => setShaking(false)}
 											/>
+											{wifiSsid.length > 0 && (
+												<ClearButton
+													key='clear-wifi'
+													onClick={() => {
+														setWifiSsid('')
+														setWifiPassword('')
+													}}
+												/>
+											)}
 										</div>
 									</div>
 								) : (
@@ -499,8 +516,14 @@ export default function App() {
 											type='text'
 											name='url'
 											value={text}
-											placeholder={qrType === 'Text' ? 'You forget a thousand things everyday, pal.' : 'domain.com'}
-											style={qrType !== 'Text' && inputWidth ? { width: `${inputWidth}px` } : undefined}
+											placeholder={
+												qrType === 'Text'
+													? 'You forget a thousand things everyday, pal.'
+													: 'domain.com'
+											}
+											style={
+												qrType !== 'Text' && inputWidth ? { width: `${inputWidth}px` } : undefined
+											}
 											onChange={(e) => {
 												let v = stripDiacritics(e.target.value)
 												if (qrType === 'Link') v = v.replace(/ /g, '-')
@@ -516,6 +539,9 @@ export default function App() {
 											shaking={shaking}
 											onShakeEnd={() => setShaking(false)}
 										/>
+										{text.length > 0 && (
+											<ClearButton key='clear-text' onClick={() => setText('')} />
+										)}
 									</motion.div>
 								)}
 
@@ -675,13 +701,13 @@ export default function App() {
 			<section className='manifesto'>
 				<div className='inner'>
 					<p>
-						Most QR code tools have lost the plot. They want you to create an account, host your
-						files, track your scans, and pick from seventeen color schemes. That's not a QR
-						generator, that's a platform trying to lock you in.
+						Most QR code tools want you to create an account, host your files, track your scans, and
+						pick from seventeen color schemes. That's not a QR generator anymore, that's a platform
+						trying to lock you in.
 					</p>
 					<p>This tool does one thing: it takes a string and turns it into a QR code. That's it.</p>
 					<p>
-						No sign-up. No file hosting. No analytics. No PNG, no JPG, no "premium export." Just a
+						No sign-up, no file hosting, no analytics, no PNG or JPG, no "premium export" Just a
 						clean SVG file. The only format a designer or developer actually needs. Scalable to any
 						size, ready to drop straight into Figma, Illustrator, or your codebase.
 					</p>
@@ -689,13 +715,10 @@ export default function App() {
 						The QR code itself is generated the way it was meant to look: sharp, square dots on a
 						clean grid. Rounded dots are a design trend that serves no one. They don't improve
 						scannability, they don't make the code more legible, and they certainly don't make it
-						more "on brand." A QR code is a machine-readable pattern, not a mood board. Rounding the
+						more "on brand." A QR code is a machine-readable pattern, not a moodboard. Rounding the
 						corners is just visual noise dressed up as customization.
 					</p>
-					<p>
-						Old school by design, because a QR code is a simple thing, and simple things deserve
-						simple tools.
-					</p>
+					<p>Old school by design, enjoy it!</p>
 				</div>
 			</section>
 
