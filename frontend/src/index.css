@@ -494,7 +494,7 @@ button:disabled {
 	padding: 0.5rem 1rem;
 	justify-content: center;
 	align-items: center;
-	gap: 0.625rem;
+	gap: 4px;
 	white-space: nowrap;
 	background: #fafafa;
 	border: 0.5px solid #cfcfcf;

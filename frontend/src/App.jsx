@@ -218,7 +218,7 @@ export default function App() {
 			if (!res.ok) throw new Error(`Server returned ${res.status}`)
 			const none = await res.text()
 			setDomains((prev) =>
-				[...prev, { url: value, svgs: { none }, punched: false }].slice(-MAX_DOMAINS),
+				[...prev, { url: value, type: qrType, svgs: { none }, punched: false }].slice(-MAX_DOMAINS),
 			)
 			setActiveUrl(value)
 		} catch (e) {
@@ -373,7 +373,11 @@ export default function App() {
 															onAnimationEnd={(e) => {
 																if (e.animationName === 'shake') setShakingUrl('')
 															}}>
-															{qrType === 'Link' ? displayUrl(d.url) : d.url}
+															{(() => {
+																const TypeIcon = QR_TYPES.find((t) => t.label === (d.type ?? 'Link'))?.Icon
+																return TypeIcon ? <TypeIcon size={14} style={{ flexShrink: 0 }} /> : null
+															})()}
+															{d.type === 'Link' || !d.type ? displayUrl(d.url) : d.url}
 														</button>
 														<button
 															type='button'
