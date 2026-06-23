@@ -685,6 +685,7 @@ button:disabled {
 
 .manifesto .inner {
 	max-width: 560px;
+	font-weight: 400;
 }
 
 .manifesto p {
