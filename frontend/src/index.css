@@ -528,7 +528,7 @@ button:disabled {
 	border-radius: 1.875rem;
 	font-size: 14px;
 	font-weight: 400;
-	color: #333333;
+	color: #333333c2;
 	box-shadow:
 		0 -2px 5px 0 rgba(125, 125, 125, 0.1) inset,
 		0 2px 5px 0 #fff inset,
