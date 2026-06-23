@@ -45,9 +45,15 @@ body {
 	font-family: 'Switzer', sans-serif;
 }
 
+.above-fold {
+	min-height: 100dvh;
+	display: flex;
+	flex-direction: column;
+}
+
 .hero {
 	width: 100%;
-	/* height: 100vh; */
+	flex: 1;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -61,6 +67,10 @@ body {
 	max-width: 860px;
 	margin: 0 auto;
 	height: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: space-between;
 }
 
 .site-header {
@@ -80,6 +90,7 @@ body {
 	flex-direction: column;
 	align-items: center;
 	gap: 3px;
+	margin: 0 auto;
 }
 
 .brand {
@@ -713,7 +724,7 @@ button.chip-delete {
 
 .today-counter {
 	width: fit-content;
-	margin: 32px auto 0;
+	margin: 0 auto 24px;
 	color: var(--blue);
 	white-space: nowrap;
 	pointer-events: none;

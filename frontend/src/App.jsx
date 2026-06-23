@@ -381,6 +381,7 @@ export default function App() {
 
 	return (
 		<>
+			<div className='above-fold'>
 			<header className='site-header'>
 				<div className='inner'>
 					<div className='header-left'>
@@ -576,14 +577,15 @@ export default function App() {
 						</div>
 					</div>
 
-					{todayCount !== null && (
-						<p className='today-counter'>
-							<span key={dotKey} className='today-dot' />
-							<NumberFlow className='today-count' value={todayCount ?? 0} /> codes generated today
-						</p>
-					)}
 				</div>
 			</main>
+			{todayCount !== null && (
+				<p className='today-counter'>
+					<span key={dotKey} className='today-dot' />
+					<NumberFlow className='today-count' value={todayCount ?? 0} /> codes generated today
+				</p>
+			)}
+			</div>
 
 			<section className='manifesto'>
 				<div className='inner'>
