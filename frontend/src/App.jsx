@@ -741,7 +741,7 @@ export default function App() {
 						<button className='punch-notice-close' onClick={dismissPunchNotice}>
 							Close
 						</button>
-						<h3 className='punch-notice-title'>Punching a hole is safe.</h3>
+						<h3 className='punch-notice-title'>Punching is safe.</h3>
 						<p className='punch-notice-body'>
 							The QR is regenerated from scratch. Center modules are never drawn, not erased. QR
 							codes at high error correction (level&nbsp;H) tolerate up to 30% module loss. The hole
