@@ -969,4 +969,5 @@ button.chip-delete {
 	line-height: 1.6;
 	color: #666666;
 	font-size: 0.9rem;
+	text-wrap: pretty;
 }
