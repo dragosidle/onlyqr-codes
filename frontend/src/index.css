@@ -55,7 +55,7 @@ body {
 	width: 100%;
 	flex: 1;
 	display: flex;
-	align-items: center;
+	align-items: stretch;
 	justify-content: center;
 	overflow-y: auto;
 	/* Keep the carousel's off-center cards from forcing horizontal page scroll. */
@@ -83,6 +83,7 @@ body {
 	display: flex;
 	justify-content: center;
 	align-items: flex-start;
+	padding: 0 24px;
 }
 
 .header-left {
@@ -105,17 +106,14 @@ body {
 	font-size: 1.2rem;
 	font-weight: 400;
 	color: #444444;
+	text-align: center;
 }
 
 .value-prop {
 	margin: 0;
 	font-size: 1rem;
 	color: #888888;
-}
-
-.hero .inner {
-	padding-top: 48px;
-	padding-bottom: 48px;
+	text-align: center;
 }
 
 .type-tabs {
@@ -166,10 +164,14 @@ body {
 }
 
 .app-layout {
+	width: 100%;
+	max-width: 860px;
+	margin: 0 auto;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	gap: 32px;
+	padding: 32px 0;
 }
 
 .controls-col {

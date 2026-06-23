@@ -405,8 +405,7 @@ export default function App() {
 			</header>
 
 			<main className='hero'>
-				<div className='inner'>
-					<div className='app-layout'>
+				<div className='app-layout'>
 						<div className='controls-col'>
 							<section className='controls'>
 								<div className='input-with-action'>
@@ -575,8 +574,6 @@ export default function App() {
 								)}
 							</AnimatePresence>
 						</div>
-					</div>
-
 				</div>
 			</main>
 			{todayCount !== null && (
