@@ -63,7 +63,12 @@ function stripDiacritics(text) {
 }
 
 function displayUrl(url) {
-	return url.replace(/^https:\/\//, '')
+	const bare = url.replace(/^https:\/\//, '')
+	const firstSlash = bare.indexOf('/')
+	if (firstSlash === -1) return bare.length > 50 ? bare.slice(0, 50) + '…' : bare
+	const secondSlash = bare.indexOf('/', firstSlash + 1)
+	const truncated = secondSlash === -1 ? bare : bare.slice(0, secondSlash) + '…'
+	return truncated.length > 50 ? truncated.slice(0, 50) + '…' : truncated
 }
 
 const QR_TYPES = [
