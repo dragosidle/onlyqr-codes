@@ -10,6 +10,7 @@ import {
 	IconSMS,
 	IconCopy,
 	IconDownload,
+	IconTick,
 	IconPunch,
 	IconPunchActive,
 	IconDelete,
@@ -78,6 +79,35 @@ const QR_TYPES = [
 	{ label: 'Call', Icon: IconCall },
 	{ label: 'SMS', Icon: IconSMS },
 ]
+
+const CONFIRM_DURATION = 5000
+
+function ConfirmButton({ className, onClick, children, ...props }) {
+	const [confirmed, setConfirmed] = useState(false)
+	const timerRef = useRef(null)
+
+	const handleClick = () => {
+		if (confirmed) return
+		onClick?.()
+		setConfirmed(true)
+		timerRef.current = setTimeout(() => setConfirmed(false), CONFIRM_DURATION)
+	}
+
+	useEffect(() => () => clearTimeout(timerRef.current), [])
+
+	return (
+		<button
+			className={`confirm-btn${confirmed ? ' confirm-btn--done' : ''}${className ? ` ${className}` : ''}`}
+			onClick={handleClick}
+			disabled={confirmed}
+			{...props}>
+			<span className='confirm-btn__label'>{children}</span>
+			<span className='confirm-btn__tick' aria-hidden='true'>
+				<IconTick size={20} />
+			</span>
+		</button>
+	)
+}
 
 export default function App() {
 	const [qrType, setQrType] = useState('Link') // stores the label string
@@ -499,9 +529,10 @@ export default function App() {
 																title={punched ? 'Remove punch hole' : 'Punch a hole'}
 																data-visitors-event='punch-btn'>
 																{punched ? <IconPunchActive /> : <IconPunch />}
+																Punch a hole
 															</button>
 
-															<button
+															<ConfirmButton
 																className='qr-download'
 																onClick={() => downloadSvg(svg, buildFilename(d, punched))}
 																title='Download SVG'
@@ -509,16 +540,16 @@ export default function App() {
 																data-visitors-event='qr-download'>
 																<IconDownload />
 																Download
-															</button>
+															</ConfirmButton>
 														</div>
 
-														<button
+														<ConfirmButton
 															className='secondary copy-svg-btn'
 															onClick={() => copySvg(svg, buildFilename(d, punched))}
 															data-visitors-event='copy-svg-btn'>
 															<IconCopy />
 															Copy SVG
-														</button>
+														</ConfirmButton>
 													</motion.div>
 												)
 											})}

@@ -258,11 +258,13 @@ body {
 	pointer-events: none;
 	transition:
 		opacity 150ms ease,
-		background 150ms ease-out;
+		background 150ms ease-out,
+		padding 300ms cubic-bezier(0.16, 1, 0.3, 1);
 	font-weight: 500;
 }
 
-.preview:hover .qr-download {
+.preview:hover .qr-download,
+.qr-download.confirm-btn--done {
 	opacity: 1;
 	pointer-events: auto;
 }
@@ -277,10 +279,54 @@ body {
 	margin-top: 16px;
 }
 
+/* ConfirmButton: slide-up label → slide-in tick animation */
+.confirm-btn {
+	position: relative;
+	overflow: hidden;
+	cursor: pointer;
+}
+
+.confirm-btn__label,
+.confirm-btn__tick {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.25rem;
+	transition:
+		transform 300ms cubic-bezier(0.16, 1, 0.3, 1),
+		opacity 300ms ease;
+}
+
+.confirm-btn__tick {
+	position: absolute;
+	inset: 0;
+	transform: translateY(100%);
+	opacity: 0;
+	pointer-events: none;
+}
+
+/* Shrink button width to icon + 24px each side */
+.confirm-btn--done {
+	padding-left: 24px;
+	padding-right: 24px;
+	gap: 0;
+	cursor: default;
+}
+
+.confirm-btn--done .confirm-btn__label {
+	transform: translateY(-100%);
+	opacity: 0;
+}
+
+.confirm-btn--done .confirm-btn__tick {
+	transform: translateY(0);
+	opacity: 1;
+}
+
 /* Off-center cards: punch + download stay hidden on hover; the bottom Copy
    button is hidden entirely (only the chip surfaces on hover). */
 .qr-card:not(.active) .preview:hover .punch-btn,
-.qr-card:not(.active) .preview:hover .qr-download {
+.qr-card:not(.active) .preview:hover .qr-download:not(.confirm-btn--done) {
 	opacity: 0;
 	pointer-events: none;
 }
@@ -482,7 +528,9 @@ button:disabled {
 	-webkit-backdrop-filter: blur(8px);
 	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.1);
 	color: #333333;
-	transition: background 150ms ease-out;
+	transition:
+		background 150ms ease-out,
+		padding 300ms cubic-bezier(0.16, 1, 0.3, 1);
 	font-weight: 500;
 }
 
@@ -605,14 +653,17 @@ button:disabled {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: 12px;
-	border-radius: 50%;
+	gap: 0.25rem;
+	white-space: nowrap;
+	padding: 8px 16px 8px 12px;
+	border-radius: 5rem;
 	border: 0.5px solid #d7d7d7;
 	background: rgba(255, 255, 255, 0.75);
 	backdrop-filter: blur(8px);
 	-webkit-backdrop-filter: blur(8px);
 	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.1);
 	color: #343330;
+	font-weight: 500;
 	cursor: pointer;
 	opacity: 0;
 	pointer-events: none;
