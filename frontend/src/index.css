@@ -708,8 +708,23 @@ button:disabled {
 	animation: shake 0.4s ease;
 }
 
+@keyframes chip-enter {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
 .domain-chip.shake {
 	animation: shake 0.4s ease;
+}
+
+.domain-chip.chip-entering {
+	animation: chip-enter 400ms ease forwards;
 }
 
 .manifesto {

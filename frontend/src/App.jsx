@@ -112,6 +112,7 @@ export default function App() {
 	const [isEmpty, setIsEmpty] = useState(loadDomains.length === 0)
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState('')
+	const [newUrls, setNewUrls] = useState(new Set())
 	const [shaking, setShaking] = useState(false)
 	const [shakingUrl, setShakingUrl] = useState('')
 	const [punchingUrl, setPunchingUrl] = useState('') // domain whose punch variant is being fetched
@@ -249,6 +250,7 @@ export default function App() {
 				[...prev, { url: value, type: qrType, svgs: { none }, punched: false }].slice(-MAX_DOMAINS),
 			)
 			setActiveUrl(value)
+			setNewUrls((prev) => new Set([...prev, value]))
 		} catch (e) {
 			setError(e.message || 'Something went wrong.')
 		} finally {
@@ -389,15 +391,13 @@ export default function App() {
 										key='track'
 										className='qr-track'
 										ref={trackRef}
-										initial={{ y: 40, opacity: 0 }}
-										animate={{ y: 0, opacity: 1, x: trackX }}
+										initial={{ opacity: 0 }}
+										animate={{ opacity: 1, x: trackX }}
 										transition={{
-											y: { duration: 0.45, ease: [0.16, 1, 0.3, 1] },
-											opacity: { duration: 0.35, ease: [0.16, 1, 0.3, 1] },
+											opacity: { duration: 0.25, ease: [0.16, 1, 0.3, 1] },
 											x: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
 										}}>
 										<AnimatePresence
-											initial={false}
 											onExitComplete={() => {
 												requestAnimationFrame(() => centerFnRef.current())
 												if (domains.length === 0) setIsEmpty(true)
@@ -414,7 +414,7 @@ export default function App() {
 															else delete cardRefs.current[d.url]
 														}}
 														className={`qr-card${isActive ? ' active' : ''}`}
-														initial={{ opacity: 0, scale: 0.9 }}
+														initial={{ opacity: 0, scale: 0.8 }}
 														animate={{ opacity: 1, scale: isActive ? 1 : 0.9 }}
 														exit={{ opacity: 0, scale: 0.9 }}
 														transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
@@ -422,10 +422,16 @@ export default function App() {
 														<div className='chip-row'>
 															<button
 																type='button'
-																className={`domain-chip${shakingUrl === d.url ? ' shake' : ''}`}
+																className={`domain-chip${shakingUrl === d.url ? ' shake' : ''}${newUrls.has(d.url) ? ' chip-entering' : ''}`}
 																onClick={() => setActiveUrl(d.url)}
 																onAnimationEnd={(e) => {
 																	if (e.animationName === 'shake') setShakingUrl('')
+																	if (e.animationName === 'chip-enter')
+																		setNewUrls((prev) => {
+																			const next = new Set(prev)
+																			next.delete(d.url)
+																			return next
+																		})
 																}}>
 																{(() => {
 																	const TypeIcon = QR_TYPES.find(
