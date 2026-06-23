@@ -54,6 +54,14 @@ function isValidLinkUrl(text) {
 	}
 }
 
+function normalizeUrl(text) {
+	return text.includes('://') ? text : 'https://' + text
+}
+
+function displayUrl(url) {
+	return url.replace(/^https:\/\//, '')
+}
+
 const QR_TYPES = [
 	{ label: 'Link', Icon: IconLink },
 	{ label: 'Text', Icon: IconText },
@@ -187,8 +195,9 @@ export default function App() {
 	}, [])
 
 	const generate = async () => {
-		const value = text.trim()
-		if (!value) return
+		const raw = text.trim()
+		if (!raw) return
+		const value = qrType === 'Link' ? normalizeUrl(raw) : raw
 		if (qrType === 'Link' && !isValidLinkUrl(value)) {
 			setShaking(true)
 			return
@@ -364,7 +373,7 @@ export default function App() {
 															onAnimationEnd={(e) => {
 																if (e.animationName === 'shake') setShakingUrl('')
 															}}>
-															{d.url}
+															{qrType === 'Link' ? displayUrl(d.url) : d.url}
 														</button>
 														<button
 															type='button'
