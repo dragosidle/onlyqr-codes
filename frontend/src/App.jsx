@@ -8,6 +8,9 @@ import {
 	IconEmail,
 	IconCall,
 	IconSMS,
+	IconWifi,
+	IconVCard,
+	IconWhatsApp,
 	IconCopy,
 	IconDownload,
 	IconTick,
@@ -63,6 +66,11 @@ function stripDiacritics(text) {
 	return text.normalize('NFD').replace(/[̀-ͯ]/g, '')
 }
 
+function extractWifiSsid(wifiUri) {
+	const match = wifiUri.match(/;S:([^;]*)/)
+	return match ? match[1] : wifiUri
+}
+
 function midTruncate(str, max = 35) {
 	if (str.length <= max) return str
 	const half = Math.floor((max - 1) / 2)
@@ -80,10 +88,13 @@ function displayUrl(url) {
 
 const QR_TYPES = [
 	{ label: 'Link', Icon: IconLink },
-	{ label: 'Text', Icon: IconText },
-	{ label: 'Email', Icon: IconEmail },
-	{ label: 'Call', Icon: IconCall },
-	{ label: 'SMS', Icon: IconSMS },
+	// { label: 'Text', Icon: IconText },
+	// { label: 'Email', Icon: IconEmail },
+	// { label: 'Call', Icon: IconCall },
+	// { label: 'SMS', Icon: IconSMS },
+	{ label: 'Wifi', Icon: IconWifi },
+	{ label: 'vCard', Icon: IconVCard },
+	{ label: 'WhatsApp', Icon: IconWhatsApp },
 ]
 
 const CONFIRM_DURATION = 5000
@@ -126,6 +137,8 @@ export default function App() {
 	}, [qrType])
 
 	const [text, setText] = useState('')
+	const [wifiSsid, setWifiSsid] = useState('')
+	const [wifiPassword, setWifiPassword] = useState('')
 	// Auto-size the URL input to its content: a hidden sizer span mirrors the
 	// text (or placeholder), and we set the input width from its measurement so
 	// the pill grows with what's typed and pushes the Generate button along.
@@ -269,12 +282,22 @@ export default function App() {
 	}, [])
 
 	const generate = async () => {
-		const raw = text.trim()
-		if (!raw) return
-		const value = qrType === 'Link' ? normalizeUrl(raw) : raw
-		if (qrType === 'Link' && !isValidLinkUrl(value)) {
-			setShaking(true)
-			return
+		let value
+		if (qrType === 'Wifi') {
+			if (!wifiSsid.trim()) {
+				setShaking(true)
+				return
+			}
+			const security = wifiPassword.trim() ? 'WPA' : 'nopass'
+			value = `WIFI:T:${security};S:${wifiSsid.trim()};P:${wifiPassword.trim()};;`
+		} else {
+			const raw = text.trim()
+			if (!raw) return
+			value = qrType === 'Link' ? normalizeUrl(raw) : raw
+			if (qrType === 'Link' && !isValidLinkUrl(value)) {
+				setShaking(true)
+				return
+			}
 		}
 		// Already have a card for this domain. If it isn't focused, just bring it
 		// into focus. Only shake its chip when it's already focused and the user
@@ -363,6 +386,9 @@ export default function App() {
 			} catch {
 				base = 'qr'
 			}
+		} else if (d.type === 'Wifi') {
+			const ssid = extractWifiSsid(d.url)
+			base = ssid.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'wifi'
 		} else {
 			base =
 				d.url
@@ -420,7 +446,8 @@ export default function App() {
 										<button
 											key={label}
 											ref={(el) => (tabRefs.current[i] = el)}
-											className={`type-tab${qrType === label ? ' active' : ''}`}
+											className={`type-tab${qrType === label ? ' active' : ''}${['Wifi', 'vCard', 'WhatsApp'].includes(label) ? ' disabled' : ''}`}
+											disabled={['Wifi', 'vCard', 'WhatsApp'].includes(label)}
 											onClick={() => setQrType(label)}>
 											<Icon size={16} />
 											{label}
@@ -428,32 +455,67 @@ export default function App() {
 									))}
 								</div>
 
-								<div className={`input-with-action${qrType === 'Text' ? ' full-width' : ''}`}>
-									<span ref={sizerRef} className='input-sizer' aria-hidden='true'>
-										{text || 'domain.com'}
-									</span>
-									<input
-										type='text'
-										name='url'
-										value={text}
-										placeholder={qrType === 'Text' ? 'You forget a thousand things everyday, pal.' : 'domain.com'}
-										style={inputWidth ? { width: `${inputWidth}px` } : undefined}
-										onChange={(e) => {
-											let v = stripDiacritics(e.target.value)
-											if (qrType === 'Link') v = v.replace(/ /g, '-')
-											setText(v)
-										}}
-										onKeyDown={(e) => e.key === 'Enter' && generate()}
-										maxLength={500}
-									/>
-									<GenerateButton
-										onClick={generate}
-										disabled={loading || text.length === 0}
-										hasText={text.length > 0}
-										shaking={shaking}
-										onShakeEnd={() => setShaking(false)}
-									/>
-								</div>
+								{qrType === 'Wifi' ? (
+									<div className='wifi-inputs'>
+										<div className='input-with-action full-width'>
+											<input
+												type='text'
+												placeholder='Network name (SSID)'
+												value={wifiSsid}
+												onChange={(e) => setWifiSsid(e.target.value)}
+												onKeyDown={(e) => e.key === 'Enter' && generate()}
+												maxLength={200}
+											/>
+										</div>
+										<div className='input-with-action full-width'>
+											<input
+												type='password'
+												placeholder='Password (optional)'
+												value={wifiPassword}
+												onChange={(e) => setWifiPassword(e.target.value)}
+												onKeyDown={(e) => e.key === 'Enter' && generate()}
+												maxLength={200}
+											/>
+											<GenerateButton
+												onClick={generate}
+												disabled={loading || wifiSsid.length === 0}
+												hasText={wifiSsid.length > 0}
+												shaking={shaking}
+												onShakeEnd={() => setShaking(false)}
+											/>
+										</div>
+									</div>
+								) : (
+									<motion.div
+										layout='size'
+										className={`input-with-action${qrType === 'Text' ? ' full-width' : ''}`}
+										transition={{ layout: { duration: 0.35, ease: [0.16, 1, 0.3, 1] } }}>
+										<span ref={sizerRef} className='input-sizer' aria-hidden='true'>
+											{text || 'domain.com'}
+										</span>
+										<input
+											type='text'
+											name='url'
+											value={text}
+											placeholder={qrType === 'Text' ? 'You forget a thousand things everyday, pal.' : 'domain.com'}
+											style={qrType !== 'Text' && inputWidth ? { width: `${inputWidth}px` } : undefined}
+											onChange={(e) => {
+												let v = stripDiacritics(e.target.value)
+												if (qrType === 'Link') v = v.replace(/ /g, '-')
+												setText(v)
+											}}
+											onKeyDown={(e) => e.key === 'Enter' && generate()}
+											maxLength={500}
+										/>
+										<GenerateButton
+											onClick={generate}
+											disabled={loading || text.length === 0}
+											hasText={text.length > 0}
+											shaking={shaking}
+											onShakeEnd={() => setShaking(false)}
+										/>
+									</motion.div>
+								)}
 
 								{error && <p className='error'>{error}</p>}
 							</section>
@@ -521,7 +583,11 @@ export default function App() {
 																		<TypeIcon size={14} style={{ flexShrink: 0 }} />
 																	) : null
 																})()}
-																{d.type === 'Link' || !d.type ? displayUrl(d.url) : midTruncate(d.url)}
+																{d.type === 'Link' || !d.type
+																	? displayUrl(d.url)
+																	: d.type === 'Wifi'
+																		? midTruncate(extractWifiSsid(d.url))
+																		: midTruncate(d.url)}
 															</button>
 															<button
 																type='button'
