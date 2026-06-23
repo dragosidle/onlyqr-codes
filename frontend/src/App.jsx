@@ -103,7 +103,7 @@ function ConfirmButton({ className, onClick, children, ...props }) {
 			{...props}>
 			<span className='confirm-btn__label'>{children}</span>
 			<span className='confirm-btn__tick' aria-hidden='true'>
-				<IconTick size={20} />
+				<IconTick size={22} />
 			</span>
 		</button>
 	)
@@ -520,36 +520,38 @@ export default function App() {
 														<div className='preview'>
 															<div dangerouslySetInnerHTML={{ __html: svg }} />
 
-															<button
-																className='punch-btn'
-																onClick={() => togglePunch(d.url)}
-																disabled={punchingUrl === d.url}
-																aria-pressed={punched}
-																aria-label={punched ? 'Remove punch hole' : 'Punch a hole'}
-																title={punched ? 'Remove punch hole' : 'Punch a hole'}
-																data-visitors-event='punch-btn'>
-																{punched ? <IconPunchActive /> : <IconPunch />}
-																Punch a hole
-															</button>
+															<div className='qr-actions'>
+																<ConfirmButton
+																	className='punch-btn'
+																	onClick={() => copySvg(svg, buildFilename(d, punched))}
+																	title='Copy SVG'
+																	aria-label='Copy SVG'
+																	data-visitors-event='copy-svg-btn'>
+																	<IconCopy size={18} />
+																	Copy SVG
+																</ConfirmButton>
 
-															<ConfirmButton
-																className='qr-download'
-																onClick={() => downloadSvg(svg, buildFilename(d, punched))}
-																title='Download SVG'
-																aria-label='Download SVG'
-																data-visitors-event='qr-download'>
-																<IconDownload />
-																Download
-															</ConfirmButton>
+																<ConfirmButton
+																	className='qr-download'
+																	onClick={() => downloadSvg(svg, buildFilename(d, punched))}
+																	title='Download SVG'
+																	aria-label='Download SVG'
+																	data-visitors-event='qr-download'>
+																	<IconDownload size={18} />
+																	Download
+																</ConfirmButton>
+															</div>
 														</div>
 
-														<ConfirmButton
+														<button
 															className='secondary copy-svg-btn'
-															onClick={() => copySvg(svg, buildFilename(d, punched))}
-															data-visitors-event='copy-svg-btn'>
-															<IconCopy />
-															Copy SVG
-														</ConfirmButton>
+															onClick={() => togglePunch(d.url)}
+															disabled={punchingUrl === d.url}
+															aria-pressed={punched}
+															data-visitors-event='punch-btn'>
+															{punched ? <IconPunchActive /> : <IconPunch />}
+															{punched ? 'Remove punch hole' : 'Punch a hole'}
+														</button>
 													</motion.div>
 												)
 											})}

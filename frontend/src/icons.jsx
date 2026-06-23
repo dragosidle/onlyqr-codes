@@ -103,7 +103,7 @@ export function IconPunchActive({ size = 20, ...props }) {
 export function IconTick({ size = 32, ...props }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-      <path d="M6.66675 16.9509L13.3559 23.6329L13.8903 22.6984C16.7558 17.6878 20.7215 13.3931 25.4883 10.138L26.6667 9.33331" stroke="#111111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M6.66675 16.9509L13.3559 23.6329L13.8903 22.6984C16.7558 17.6878 20.7215 13.3931 25.4883 10.138L26.6667 9.33331" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
 }

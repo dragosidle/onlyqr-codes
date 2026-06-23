@@ -233,13 +233,32 @@ body {
 	pointer-events: auto;
 }
 
-/* Download button, overlaid at the bottom-center of the QR, revealed on hover. */
-.qr-download {
+/* Action row: both overlay buttons side-by-side, pinned to the bottom of the QR. */
+.qr-actions {
 	position: absolute;
 	bottom: 16px;
 	left: 50%;
-	transform: translateX(-50%);
+	transform: translateX(-50%) translateY(6px);
 	z-index: 10;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	opacity: 0;
+	pointer-events: none;
+	transition:
+		opacity 180ms ease,
+		transform 180ms ease;
+}
+
+.preview:hover .qr-actions,
+.qr-actions:has(.confirm-btn--done) {
+	opacity: 1;
+	transform: translateX(-50%) translateY(0);
+	pointer-events: auto;
+}
+
+/* Download button, inside .qr-actions container. */
+.qr-download {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -248,16 +267,11 @@ body {
 	padding: 8px 16px 8px 12px;
 	border-radius: 5rem;
 	border: 0.5px solid #d7d7d7;
-	background: rgba(255, 255, 255, 0.75);
-	backdrop-filter: blur(8px);
-	-webkit-backdrop-filter: blur(8px);
+	background: #ffffff;
 	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.1);
 	color: #343330;
 	cursor: pointer;
-	opacity: 0;
-	pointer-events: none;
 	transition:
-		opacity 150ms ease,
 		background 150ms ease-out,
 		padding 300ms cubic-bezier(0.16, 1, 0.3, 1),
 		transform 100ms ease,
@@ -265,19 +279,8 @@ body {
 	font-weight: 500;
 }
 
-.qr-download:active:not(:disabled) {
-	transform: translateX(-50%) scale(0.98);
-	box-shadow: none;
-}
-
-.preview:hover .qr-download,
-.qr-download.confirm-btn--done {
-	opacity: 1;
-	pointer-events: auto;
-}
-
 .qr-download:hover {
-	background: rgba(239, 239, 239, 0.75);
+	background: #efefef;
 	transition: background 100ms ease-in;
 }
 
@@ -291,6 +294,8 @@ body {
 	position: relative;
 	overflow: hidden;
 	cursor: pointer;
+	max-width: 400px;
+	transition: max-width 300ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .confirm-btn__label,
@@ -299,6 +304,8 @@ body {
 	align-items: center;
 	justify-content: center;
 	gap: 0.25rem;
+	white-space: nowrap;
+	overflow: hidden;
 	transition:
 		transform 300ms cubic-bezier(0.16, 1, 0.3, 1),
 		opacity 300ms ease;
@@ -310,14 +317,18 @@ body {
 	transform: translateY(100%);
 	opacity: 0;
 	pointer-events: none;
+	color: var(--blue);
 }
 
 /* Shrink button width to icon + 24px each side */
 .confirm-btn--done {
 	padding-left: 24px;
 	padding-right: 24px;
+	max-width: 68px; /* 20px icon + 24px × 2 */
 	gap: 0;
 	cursor: default;
+	opacity: 1 !important;
+	background: #ffffff !important;
 }
 
 .confirm-btn--done .confirm-btn__label {
@@ -330,10 +341,8 @@ body {
 	opacity: 1;
 }
 
-/* Off-center cards: punch + download stay hidden on hover; the bottom Copy
-   button is hidden entirely (only the chip surfaces on hover). */
-.qr-card:not(.active) .preview:hover .punch-btn,
-.qr-card:not(.active) .preview:hover .qr-download:not(.confirm-btn--done) {
+/* Off-center cards: action row stays hidden on hover (but not if a confirm is active). */
+.qr-card:not(.active) .preview:hover .qr-actions:not(:has(.confirm-btn--done)) {
 	opacity: 0;
 	pointer-events: none;
 }
@@ -601,6 +610,9 @@ button:disabled {
 	font-size: 14px;
 	font-weight: 400;
 	color: #333333c2;
+	cursor: default;
+	user-select: none;
+	pointer-events: none;
 	box-shadow:
 		0 -2px 5px 0 rgba(125, 125, 125, 0.1) inset,
 		0 2px 5px 0 #fff inset,
@@ -635,11 +647,16 @@ button:disabled {
 	cursor: pointer;
 	opacity: 0;
 	pointer-events: none;
+}
+
+button.chip-delete {
 	transition:
 		opacity 150ms ease,
 		background 150ms ease-out,
 		color 150ms ease-out,
-		border-color 150ms ease-out;
+		border-color 150ms ease-out,
+		transform 100ms ease,
+		box-shadow 100ms ease;
 }
 
 .qr-card.active .chip-delete {
@@ -653,22 +670,16 @@ button:disabled {
 	color: #e5484d;
 }
 
-/* Scope QR sizing to the QR/placeholder svg only — not the Copy SVG button icon
-   (which lives in .preview > button.secondary and keeps its own size). */
+/* Scope QR sizing to the QR/placeholder svg only — not button icons inside .qr-actions. */
 .preview > svg,
-.preview > div svg {
+.preview > div:not(.qr-actions) svg {
 	width: 248px;
 	height: 248px;
 	display: block;
 }
 
-/* Floating punch-hole button, pinned to the QR container's top-right corner. */
+/* Copy SVG button, inside .qr-actions container. */
 .punch-btn {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	z-index: 10;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -677,17 +688,12 @@ button:disabled {
 	padding: 8px 16px 8px 12px;
 	border-radius: 5rem;
 	border: 0.5px solid #d7d7d7;
-	background: rgba(255, 255, 255, 0.75);
-	backdrop-filter: blur(8px);
-	-webkit-backdrop-filter: blur(8px);
+	background: #ffffff;
 	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.1);
 	color: #343330;
 	font-weight: 500;
 	cursor: pointer;
-	opacity: 0;
-	pointer-events: none;
 	transition:
-		opacity 150ms ease,
 		background 150ms ease-out,
 		color 150ms ease-out,
 		border-color 150ms ease-out,
@@ -695,19 +701,8 @@ button:disabled {
 		box-shadow 100ms ease;
 }
 
-.punch-btn:active:not(:disabled) {
-	transform: translate(-50%, -50%) scale(0.98);
-	box-shadow: none;
-}
-
-/* Revealed on hover, matching the Copy/Download action row. */
-.preview:hover .punch-btn {
-	opacity: 1;
-	pointer-events: auto;
-}
-
 .punch-btn:hover:not(:disabled) {
-	background: rgba(239, 239, 239, 0.75);
+	background: #efefef;
 	transition: background 100ms ease-in;
 }
 
