@@ -445,7 +445,8 @@ body {
 	width: 100%;
 }
 
-.input-with-action:focus-within {
+.input-with-action:focus-within,
+.input-with-action:has(input:not(:placeholder-shown)) {
 	background: #fff;
 	border-bottom-color: #e8e8e8;
 	box-shadow:
