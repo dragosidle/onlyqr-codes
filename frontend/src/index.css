@@ -638,6 +638,10 @@ button:disabled {
 	transition: background 50ms ease-in;
 }
 
+.secondary.no-icon {
+	padding-left: 24px;
+}
+
 .error {
 	color: #ff6b6b;
 	margin: 0;
@@ -848,6 +852,10 @@ button.chip-delete {
 }
 
 .generate-btn.shake {
+	animation: shake 0.4s ease;
+}
+
+.preview.shake {
 	animation: shake 0.4s ease;
 }
 

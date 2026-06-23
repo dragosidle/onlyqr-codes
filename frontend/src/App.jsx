@@ -15,7 +15,6 @@ import {
 	IconDownload,
 	IconTick,
 	IconPunch,
-	IconPunchActive,
 	IconDelete,
 } from './icons'
 import GenerateButton from './GenerateButton'
@@ -171,6 +170,7 @@ export default function App() {
 	const [shaking, setShaking] = useState(false)
 	const [shakingUrl, setShakingUrl] = useState('')
 	const [punchingUrl, setPunchingUrl] = useState('') // domain whose punch variant is being fetched
+	const [shakingPunchUrl, setShakingPunchUrl] = useState('')
 	const [punchNoticeDismissed, setPunchNoticeDismissed] = useState(false)
 	const [isDesktop, setIsDesktop] = useState(() => window.matchMedia('(min-width: 600px)').matches)
 	useEffect(() => {
@@ -339,12 +339,16 @@ export default function App() {
 		if (!d) return
 		// Already have the variant (or turning it off) — just flip the flag.
 		if (d.punched || d.svgs.punched) {
-			if (!d.punched) setPunchedThisSession(true)
+			if (!d.punched) {
+				setPunchedThisSession(true)
+				setShakingPunchUrl(url)
+			}
 			setDomains((prev) => prev.map((x) => (x.url === url ? { ...x, punched: !x.punched } : x)))
 			return
 		}
 		setError('')
 		setPunchingUrl(url)
+		setShakingPunchUrl(url)
 		try {
 			const params = new URLSearchParams({ url, hole: 'large', shape: 'square' })
 			const res = await fetch(`/api/qr?${params.toString()}`)
@@ -631,7 +635,11 @@ export default function App() {
 															</button>
 														</div>
 
-														<div className='preview'>
+														<div
+															className={`preview${shakingPunchUrl === d.url ? ' shake' : ''}`}
+															onAnimationEnd={(e) => {
+																if (e.animationName === 'shake') setShakingPunchUrl('')
+															}}>
 															<div dangerouslySetInnerHTML={{ __html: svg }} />
 
 															<div className='qr-actions'>
@@ -658,12 +666,12 @@ export default function App() {
 														</div>
 
 														<button
-															className='secondary copy-svg-btn'
+															className={`secondary copy-svg-btn${punched ? ' no-icon' : ''}`}
 															onClick={() => togglePunch(d.url)}
 															disabled={punchingUrl === d.url}
 															aria-pressed={punched}
 															data-visitors-event='punch-btn'>
-															{punched ? <IconPunchActive /> : <IconPunch />}
+															{!punched && <IconPunch />}
 															{punched ? 'Remove punch hole' : 'Punch a hole'}
 														</button>
 													</motion.div>
@@ -715,8 +723,8 @@ export default function App() {
 						The QR code itself is generated the way it was meant to look: sharp, square dots on a
 						clean grid. Rounded dots are a design trend that serves no one. They don't improve
 						scannability, they don't make the code more legible, and they certainly don't make it
-						more "on brand." A QR code is a machine-readable pattern, not a moodboard. Rounding the
-						corners is just visual noise dressed up as customization.
+						more "on brand." A QR code is a machine-readable pattern, not a moodboard element.
+						Rounding the corners is just visual noise dressed up as customization.
 					</p>
 					<p>Old school by design, enjoy it!</p>
 				</div>
