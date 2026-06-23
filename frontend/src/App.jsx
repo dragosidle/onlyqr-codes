@@ -107,6 +107,9 @@ export default function App() {
 	}, [text])
 	const [domains, setDomains] = useState(loadDomains)
 	const [activeUrl, setActiveUrl] = useState(loadActiveUrl)
+	// Stays false until onExitComplete fires after the last card exits, so the
+	// track stays mounted during the exit animation instead of vanishing instantly.
+	const [isEmpty, setIsEmpty] = useState(loadDomains.length === 0)
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState('')
 	const [shaking, setShaking] = useState(false)
@@ -133,6 +136,12 @@ export default function App() {
 		clearTimeout(deleteTimer.current)
 		return () => clearTimeout(deleteTimer.current)
 	}, [activeDomain?.url])
+
+	// When a new QR is added after all were deleted, unhide the track before the
+	// enter animation so the card can animate in normally.
+	useEffect(() => {
+		if (domains.length > 0) setIsEmpty(false)
+	}, [domains.length])
 
 	// Persist the domain history and the active selection.
 	useEffect(() => {
@@ -368,7 +377,7 @@ export default function App() {
 						</div>
 
 						<div className='qr-row'>
-							{domains.length > 0 ? (
+							{!isEmpty ? (
 								// Carousel track: all domain cards in a row, translated so the
 								// active (newest by default) card is centered. Generating a new
 								// domain appends a card at the right and slides the track left,
@@ -380,7 +389,10 @@ export default function App() {
 									transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}>
 									<AnimatePresence
 										initial={false}
-										onExitComplete={() => requestAnimationFrame(() => centerFnRef.current())}>
+										onExitComplete={() => {
+											requestAnimationFrame(() => centerFnRef.current())
+											if (domains.length === 0) setIsEmpty(true)
+										}}>
 										{domains.map((d) => {
 											const punched = !!(d.punched && d.svgs.punched)
 											const svg = punched ? d.svgs.punched : d.svgs.none
