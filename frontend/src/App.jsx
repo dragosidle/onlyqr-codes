@@ -115,27 +115,10 @@ export default function App() {
 	const [shaking, setShaking] = useState(false)
 	const [shakingUrl, setShakingUrl] = useState('')
 	const [punchingUrl, setPunchingUrl] = useState('') // domain whose punch variant is being fetched
-	const [deleteVisible, setDeleteVisible] = useState(false) // focused card's delete button
-	const deleteTimer = useRef(null)
-
 	// The centered card (falls back to the most recent domain if the stored
 	// activeUrl ever drifts out of the list).
 	const activeDomain =
 		domains.find((d) => d.url === activeUrl) || domains[domains.length - 1] || null
-
-	// Reveal the focused card's delete button, then auto-hide it after 3s.
-	const revealDelete = () => {
-		setDeleteVisible(true)
-		clearTimeout(deleteTimer.current)
-		deleteTimer.current = setTimeout(() => setDeleteVisible(false), 3000)
-	}
-
-	// Reset the delete reveal whenever focus moves to a different card.
-	useEffect(() => {
-		setDeleteVisible(false)
-		clearTimeout(deleteTimer.current)
-		return () => clearTimeout(deleteTimer.current)
-	}, [activeDomain?.url])
 
 	// When a new QR is added after all were deleted, unhide the track before the
 	// enter animation so the card can animate in normally.
@@ -419,8 +402,7 @@ export default function App() {
 													animate={{ opacity: 1, scale: isActive ? 1 : 0.9 }}
 													exit={{ opacity: 0, scale: 0.9 }}
 													transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-													onClick={() => !isActive && setActiveUrl(d.url)}
-													onMouseEnter={isActive ? revealDelete : undefined}>
+													onClick={() => !isActive && setActiveUrl(d.url)}>
 													<div className='chip-row'>
 														<button
 															type='button'
@@ -437,9 +419,7 @@ export default function App() {
 														</button>
 														<button
 															type='button'
-															className={`chip-delete${isActive && deleteVisible ? ' show' : ''}`}
-															onMouseEnter={() => clearTimeout(deleteTimer.current)}
-															onMouseLeave={revealDelete}
+															className='chip-delete'
 															onClick={(e) => {
 																e.stopPropagation()
 																deleteDomain(d.url)

@@ -507,8 +507,7 @@ button:disabled {
 }
 
 /* Each card's own domain chip, floating just above its QR preview. */
-/* Chip + delete float above the QR. The chip is the only in-flow child so it
-   stays centered over the card; the delete button is pinned just to its right. */
+/* Chip + delete are both in-flow flex children, centered as a pair. */
 .chip-row {
 	position: absolute;
 	left: 50%;
@@ -517,6 +516,7 @@ button:disabled {
 	z-index: 20;
 	display: flex;
 	align-items: center;
+	gap: 8px;
 }
 
 .domain-chip {
@@ -541,14 +541,10 @@ button:disabled {
 		color 120ms ease;
 }
 
-/* Round delete button: same height and look as the chip, icon only. Pinned to
-   the chip's right (8px gap) and only revealed when the focused card is hovered. */
+/* Round delete button: same height and look as the chip, icon only.
+   In-flow next to the chip so the pair is centered together.
+   Only visible on the focused card. */
 .chip-delete {
-	position: absolute;
-	left: 100%;
-	margin-left: 8px;
-	top: 0;
-	bottom: 0;
 	aspect-ratio: 1;
 	display: flex;
 	align-items: center;
@@ -572,7 +568,7 @@ button:disabled {
 		border-color 150ms ease-out;
 }
 
-.chip-delete.show {
+.qr-card.active .chip-delete {
 	opacity: 1;
 	pointer-events: auto;
 }
