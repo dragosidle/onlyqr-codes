@@ -1,5 +1,5 @@
 import { useState, useRef, useLayoutEffect, useEffect } from 'react'
-import { AnimatePresence, motion } from 'motion/react'
+import { AnimatePresence, motion, useMotionValue, animate as animateMotion } from 'motion/react'
 import NumberFlow from '@number-flow/react'
 import {
 	IllustrationQRPlaceholder,
@@ -109,7 +109,7 @@ export default function App() {
 	const [activeUrl, setActiveUrl] = useState(loadActiveUrl)
 	// Stays false until onExitComplete fires after the last card exits, so the
 	// track stays mounted during the exit animation instead of vanishing instantly.
-	const [isEmpty, setIsEmpty] = useState(loadDomains.length === 0)
+	const [isEmpty, setIsEmpty] = useState(() => loadDomains().length === 0)
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState('')
 	const [newUrls, setNewUrls] = useState(new Set())
@@ -162,13 +162,22 @@ export default function App() {
 	// card becomes active on generate, so the latest QR is always centered.
 	const trackRef = useRef(null)
 	const cardRefs = useRef({})
-	const [trackX, setTrackX] = useState(0)
+	const trackX = useMotionValue(0)
+	// Skip x animation on the first centering when data was pre-loaded from
+	// localStorage (track appears instantly, so animating x would cause a slide).
+	const pageLoadWithData = useRef(domains.length > 0)
 
 	const centerActiveCard = () => {
 		const track = trackRef.current
 		const card = activeDomain && cardRefs.current[activeDomain.url]
 		if (!track || !card) return
-		setTrackX(track.offsetWidth / 2 - (card.offsetLeft + card.offsetWidth / 2))
+		const newX = track.offsetWidth / 2 - (card.offsetLeft + card.offsetWidth / 2)
+		if (pageLoadWithData.current) {
+			trackX.set(newX)
+			pageLoadWithData.current = false
+		} else {
+			animateMotion(trackX, newX, { duration: 0.5, ease: [0.16, 1, 0.3, 1] })
+		}
 	}
 
 	// Re-center whenever the active card or the number of cards changes — except
@@ -333,7 +342,7 @@ export default function App() {
 								<span style={{ color: '#008CD0' }}>QR.codes</span>
 							</p>
 						</div>
-						<h1 className='site-subtitle'>QR codes generator for designers & developers</h1>
+						<h1 className='site-subtitle'>Free QR code generator for designers & developers</h1>
 						<p className='value-prop'>
 							No sign-ups, no paywall, no pointless customization, just good old SVGs.
 						</p>
@@ -391,12 +400,10 @@ export default function App() {
 										key='track'
 										className='qr-track'
 										ref={trackRef}
+										style={{ x: trackX }}
 										initial={{ opacity: 0 }}
-										animate={{ opacity: 1, x: trackX }}
-										transition={{
-											opacity: { duration: 0.25, ease: [0.16, 1, 0.3, 1] },
-											x: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
-										}}>
+										animate={{ opacity: 1 }}
+										transition={{ opacity: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}>
 										<AnimatePresence
 											onExitComplete={() => {
 												requestAnimationFrame(() => centerFnRef.current())
