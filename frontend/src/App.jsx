@@ -341,7 +341,11 @@ export default function App() {
 										value={text}
 										placeholder='domain.com'
 										style={inputWidth ? { width: `${inputWidth}px` } : undefined}
-										onChange={(e) => setText(stripDiacritics(e.target.value))}
+										onChange={(e) => {
+											let v = stripDiacritics(e.target.value)
+											if (qrType === 'Link') v = v.replace(/ /g, '-')
+											setText(v)
+										}}
 										onKeyDown={(e) => e.key === 'Enter' && generate()}
 										maxLength={500}
 									/>
