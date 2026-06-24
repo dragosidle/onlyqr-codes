@@ -63,7 +63,7 @@ services:
       - "traefik.http.routers.onlyqr.rule=Host(`onlyqr.codes`)"
       - "traefik.http.routers.onlyqr.entrypoints=websecure"
       - "traefik.http.routers.onlyqr.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.onlyqr.middlewares=security-headers@file,gzip-compress@file"
+      - "traefik.http.routers.onlyqr.middlewares=onlyqr-security-headers@file,gzip-compress@file"
       - "traefik.http.routers.onlyqr.service=onlyqr"
       - "traefik.http.services.onlyqr.loadbalancer.server.port=8000" # gunicorn inside the container
 
