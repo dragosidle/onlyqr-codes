@@ -305,6 +305,10 @@ body {
 	.qr-track {
 		gap: 8px;
 	}
+
+	.clear-btn {
+		display: none;
+	}
 }
 
 /* Download button, inside .qr-actions container. */
