@@ -232,7 +232,8 @@ export default function App() {
 	// Skip x animation on the first centering when data was pre-loaded from
 	// localStorage (track appears instantly, so animating x would cause a slide).
 	const pageLoadWithData = useRef(domains.length > 0)
-
+	// Drag state — set true during a drag so card click handlers don't fire.
+	const isDraggingRef = useRef(false)
 	const centerActiveCard = () => {
 		const track = trackRef.current
 		const card = activeDomain && cardRefs.current[activeDomain.url]
@@ -608,7 +609,39 @@ export default function App() {
 										style={{ x: trackX }}
 										initial={{ opacity: 0 }}
 										animate={{ opacity: 1 }}
-										transition={{ opacity: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}>
+										transition={{ opacity: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}
+										drag='x'
+										dragConstraints={{ left: -99999, right: 99999 }}
+										dragElastic={0}
+										dragMomentum={false}
+										onDragStart={() => { isDraggingRef.current = true }}
+										onDragEnd={(_, info) => {
+											const track = trackRef.current
+											if (!track) return
+											const projectedX = trackX.get() + info.velocity.x * 0.1
+											let nearestUrl = null
+											let minDist = Infinity
+											for (const [url, card] of Object.entries(cardRefs.current)) {
+												const targetX =
+													track.offsetWidth / 2 - (card.offsetLeft + card.offsetWidth / 2)
+												if (Math.abs(projectedX - targetX) < minDist) {
+													minDist = Math.abs(projectedX - targetX)
+													nearestUrl = url
+												}
+											}
+											requestAnimationFrame(() => { isDraggingRef.current = false })
+											if (!nearestUrl) return
+											if (nearestUrl !== activeUrl) {
+												setActiveUrl(nearestUrl)
+											} else {
+												const card = cardRefs.current[nearestUrl]
+												animateMotion(
+													trackX,
+													track.offsetWidth / 2 - (card.offsetLeft + card.offsetWidth / 2),
+													{ duration: 0.35, ease: [0.16, 1, 0.3, 1] },
+												)
+											}
+										}}>
 										<AnimatePresence
 											onExitComplete={() => {
 												requestAnimationFrame(() => centerFnRef.current())
@@ -630,7 +663,7 @@ export default function App() {
 														animate={{ opacity: 1, scale: isActive ? 1 : 0.9 }}
 														exit={{ opacity: 0, scale: 0.9 }}
 														transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-														onClick={() => !isActive && setActiveUrl(d.url)}>
+														onClick={() => !isDraggingRef.current && !isActive && setActiveUrl(d.url)}>
 														<div className='chip-row'>
 															<button
 																type='button'

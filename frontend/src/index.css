@@ -212,6 +212,12 @@ body {
 	display: flex;
 	align-items: flex-start;
 	gap: 48px;
+	user-select: none;
+	cursor: grab;
+}
+
+.qr-track:active {
+	cursor: grabbing;
 }
 
 /* Each card = a floating domain chip above its own QR preview. */
