@@ -40,21 +40,38 @@ _redis = aioredis.from_url(
 )
 
 
-def _next_utc_midnight() -> int:
-    """Unix timestamp of the next UTC midnight (daily key expiry)."""
-    now = datetime.datetime.now(datetime.timezone.utc)
-    tomorrow = (now + datetime.timedelta(days=1)).replace(
-        hour=0, minute=0, second=0, microsecond=0
+def _local_date_from_tz_offset(tz_offset: int) -> datetime.date:
+    """Return the viewer's local calendar date given their JS getTimezoneOffset() value.
+
+    JS getTimezoneOffset() returns minutes-behind-UTC (negative for UTC+ zones),
+    so subtracting it from UTC gives local time: UTC+9 → -540, UTC-5 → 300.
+    """
+    utc_now = datetime.datetime.now(datetime.timezone.utc)
+    return (utc_now - datetime.timedelta(minutes=tz_offset)).date()
+
+
+def _key_expiry_for_date(local_date: datetime.date) -> int:
+    """Unix timestamp when a calendar-date key should expire.
+
+    UTC-12 (IDLW) is the last timezone to finish any given calendar date.
+    Its midnight equals noon UTC the following day, so we expire then to
+    keep the key alive for every viewer still in that date.
+    """
+    next_day = local_date + datetime.timedelta(days=1)
+    expiry = datetime.datetime(
+        next_day.year, next_day.month, next_day.day,
+        12, 0, 0, tzinfo=datetime.timezone.utc,
     )
-    return int(tomorrow.timestamp())
+    return int(expiry.timestamp())
 
 
-async def _increment_daily_counter() -> None:
-    key = f"qr:count:{datetime.date.today().isoformat()}"
+async def _increment_daily_counter(tz_offset: int) -> None:
+    local_date = _local_date_from_tz_offset(tz_offset)
+    key = f"qr:count:{local_date.isoformat()}"
     try:
         pipe = _redis.pipeline()
         pipe.incr(key)
-        pipe.expireat(key, _next_utc_midnight())
+        pipe.expireat(key, _key_expiry_for_date(local_date))
         await pipe.execute()
     except Exception:
         pass  # non-critical — counter silently skipped if Valkey is down
@@ -74,11 +91,12 @@ async def generate_qr(
     url: str = Query(..., min_length=1, max_length=500),
     hole: str | None = Query(None, pattern="^(small|medium|large)$"),
     shape: str = Query("square", pattern="^(square|circle)$"),
+    tz_offset: int = Query(0, ge=-840, le=720),
 ):
     if not url.startswith(("http://", "https://")):
         url = "https://" + url
     svg = build_svg_cached(url, hole, shape)
-    await _increment_daily_counter()
+    await _increment_daily_counter(tz_offset)
     headers = {
         "Content-Disposition": f'inline; filename="qr-{make_filename(url)}.svg"'
     }
@@ -86,8 +104,9 @@ async def generate_qr(
 
 
 @app.get("/api/stats/today")
-async def stats_today():
-    key = f"qr:count:{datetime.date.today().isoformat()}"
+async def stats_today(tz_offset: int = Query(0, ge=-840, le=720)):
+    local_date = _local_date_from_tz_offset(tz_offset)
+    key = f"qr:count:{local_date.isoformat()}"
     try:
         val = await _redis.get(key)
         return JSONResponse({"count": int(val or 0)})

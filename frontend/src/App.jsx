@@ -22,6 +22,10 @@ import ClearButton from './ClearButton'
 import trollImg from './troll.avif' // bundled by Vite -> correct hashed URL in dev & prod
 import aliDittherImg from './ali-ditther.avif'
 
+// JS getTimezoneOffset() returns minutes-behind-UTC (negative for UTC+ zones).
+// Computed once at module load — DST transitions mid-session are rare enough to ignore.
+const TZ_OFFSET = new Date().getTimezoneOffset()
+
 // Persisted multi-domain history. Each entry is
 //   { url, svgs: { none, punched? }, punched: boolean }
 // `none` is the default QR fetched on generate; `punched` (in svgs) is the
@@ -273,7 +277,7 @@ export default function App() {
 	useEffect(() => {
 		const poll = async () => {
 			try {
-				const res = await fetch('/api/stats/today')
+				const res = await fetch(`/api/stats/today?tz_offset=${TZ_OFFSET}`)
 				if (res.ok) {
 					const { count } = await res.json()
 					setTodayCount(count)
@@ -317,7 +321,7 @@ export default function App() {
 		setError('')
 		setLoading(true)
 		try {
-			const params = new URLSearchParams({ url: value })
+			const params = new URLSearchParams({ url: value, tz_offset: TZ_OFFSET })
 			const res = await fetch(`/api/qr?${params.toString()}`)
 			if (!res.ok) throw new Error(`Server returned ${res.status}`)
 			const none = await res.text()
@@ -351,7 +355,7 @@ export default function App() {
 		setPunchingUrl(url)
 		setShakingPunchUrl(url)
 		try {
-			const params = new URLSearchParams({ url, hole: 'large', shape: 'square' })
+			const params = new URLSearchParams({ url, hole: 'large', shape: 'square', tz_offset: TZ_OFFSET })
 			const res = await fetch(`/api/qr?${params.toString()}`)
 			if (!res.ok) throw new Error(`Server returned ${res.status}`)
 			const punched = await res.text()
