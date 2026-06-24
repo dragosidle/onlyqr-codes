@@ -610,7 +610,8 @@ export default function App() {
 										initial={{ opacity: 0 }}
 										animate={{ opacity: 1 }}
 										transition={{ opacity: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}
-										drag='x'
+										data-single={domains.length === 1 || undefined}
+										drag={domains.length > 1 ? 'x' : false}
 										dragConstraints={{ left: -99999, right: 99999 }}
 										dragElastic={0}
 										dragMomentum={false}
