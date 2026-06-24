@@ -489,6 +489,7 @@ export default function App() {
 					<div className='app-layout'>
 						<div className='controls-col'>
 							<section className='controls'>
+								{/* type-tabs hidden for now
 								<div className='type-tabs'>
 									<div className='type-tab-indicator' style={indicatorStyle} />
 									{QR_TYPES.map(({ label, Icon }, i) => (
@@ -503,6 +504,7 @@ export default function App() {
 										</button>
 									))}
 								</div>
+								*/}
 
 								{qrType === 'Wifi' ? (
 									<div className='wifi-inputs'>
