@@ -152,8 +152,10 @@ body {
 	white-space: nowrap;
 }
 
-.type-tab:hover {
-	color: #0f1115;
+@media (hover: hover) {
+	.type-tab:hover {
+		color: #0f1115;
+	}
 }
 
 .type-tab.active {
@@ -243,11 +245,13 @@ body {
 		transform 200ms ease;
 }
 
-.qr-card:not(.active):has(.preview:hover) .domain-chip,
-.qr-card:not(.active):has(.domain-chip:hover) .domain-chip {
-	opacity: 1;
-	transform: translateY(0);
-	pointer-events: auto;
+@media (hover: hover) {
+	.qr-card:not(.active):has(.preview:hover) .domain-chip,
+	.qr-card:not(.active):has(.domain-chip:hover) .domain-chip {
+		opacity: 1;
+		transform: translateY(0);
+		pointer-events: auto;
+	}
 }
 
 /* Action row: both overlay buttons side-by-side, pinned to the bottom of the QR. */
@@ -267,11 +271,18 @@ body {
 		transform 180ms ease;
 }
 
-.preview:hover .qr-actions,
 .qr-actions:has(.confirm-btn--done) {
 	opacity: 1;
 	transform: translateX(-50%) translateY(0);
 	pointer-events: auto;
+}
+
+@media (hover: hover) {
+	.preview:hover .qr-actions {
+		opacity: 1;
+		transform: translateX(-50%) translateY(0);
+		pointer-events: auto;
+	}
 }
 
 /* Download button, inside .qr-actions container. */
@@ -296,9 +307,11 @@ body {
 	font-weight: 500;
 }
 
-.qr-download:hover {
-	background: #efefef;
-	transition: background 100ms ease-in;
+@media (hover: hover) {
+	.qr-download:hover {
+		background: #efefef;
+		transition: background 100ms ease-in;
+	}
 }
 
 /* Copy SVG button at the bottom of the focused card (copies that card's QR). */
@@ -410,8 +423,10 @@ body {
 	transition: opacity 150ms ease;
 }
 
-.clear-btn:hover {
-	opacity: 1;
+@media (hover: hover) {
+	.clear-btn:hover {
+		opacity: 1;
+	}
 }
 
 .input-with-action {
@@ -529,12 +544,14 @@ body {
 	user-select: none;
 }
 
-.input-with-action .generate-btn:hover:not(:disabled) {
-	background: #2b79ff !important;
-	transition:
-		background 100ms ease,
-		color 100ms ease,
-		box-shadow 100ms ease !important;
+@media (hover: hover) {
+	.input-with-action .generate-btn:hover:not(:disabled) {
+		background: #2b79ff !important;
+		transition:
+			background 100ms ease,
+			color 100ms ease,
+			box-shadow 100ms ease !important;
+	}
 }
 
 .input-with-action .generate-btn:disabled {
@@ -634,9 +651,11 @@ button:disabled {
 	font-weight: 500;
 }
 
-.secondary:hover {
-	background: rgba(239, 239, 239, 0.926);
-	transition: background 50ms ease-in;
+@media (hover: hover) {
+	.secondary:hover {
+		background: rgba(239, 239, 239, 0.926);
+		transition: background 50ms ease-in;
+	}
 }
 
 .secondary.no-icon {
@@ -740,10 +759,12 @@ button.chip-delete {
 	pointer-events: auto;
 }
 
-.chip-delete:hover {
-	background: #fdeced;
-	border-color: #f3b9bb;
-	color: #e5484d;
+@media (hover: hover) {
+	.chip-delete:hover {
+		background: #fdeced;
+		border-color: #f3b9bb;
+		color: #e5484d;
+	}
 }
 
 /* Scope QR sizing to the QR/placeholder svg only — not button icons inside .qr-actions. */
@@ -777,9 +798,11 @@ button.chip-delete {
 		box-shadow 100ms ease;
 }
 
-.punch-btn:hover:not(:disabled) {
-	background: #efefef;
-	transition: background 100ms ease-in;
+@media (hover: hover) {
+	.punch-btn:hover:not(:disabled) {
+		background: #efefef;
+		transition: background 100ms ease-in;
+	}
 }
 
 .punch-btn:disabled {
@@ -970,8 +993,10 @@ button.chip-delete {
 	transition: background 100ms ease;
 }
 
-.punch-notice-close:hover {
-	background: #e8e8e8;
+@media (hover: hover) {
+	.punch-notice-close:hover {
+		background: #e8e8e8;
+	}
 }
 
 .punch-notice-title {
