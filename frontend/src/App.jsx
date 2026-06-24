@@ -347,6 +347,7 @@ export default function App() {
 			)
 			setActiveUrl(value)
 			setNewUrls((prev) => new Set([...prev, value]))
+			document.activeElement?.blur()
 		} catch (e) {
 			setError(e.message || 'Something went wrong.')
 		} finally {
