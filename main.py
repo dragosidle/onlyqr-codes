@@ -15,22 +15,33 @@ from fastapi import FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 from qr import HOLE_RATIOS, build_svg, make_filename
 
-limiter = Limiter(key_func=get_remote_address)
+limiter = Limiter(
+    key_func=get_remote_address,
+    storage_uri=os.getenv("REDIS_URL", "redis://localhost:6379"),
+)
 
-app = FastAPI(title="OnlyQR")
+_is_prod = os.getenv("ENV") == "production"
+app = FastAPI(
+    title="OnlyQR",
+    docs_url=None if _is_prod else "/docs",
+    redoc_url=None if _is_prod else "/redoc",
+    openapi_url=None if _is_prod else "/openapi.json",
+)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[] if os.getenv("ENV") == "production" else ["http://localhost:5173"],
-    allow_methods=["GET"],
+    allow_origins=[] if _is_prod else ["http://localhost:5173"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
 _redis = aioredis.from_url(
@@ -84,6 +95,14 @@ def build_svg_cached(text: str, hole: str | None, shape: str) -> str:
     return build_svg(text, ratio, shape)
 
 
+class WifiQrRequest(BaseModel):
+    ssid: str = Field(..., min_length=1, max_length=256)
+    password: str = Field(default="", max_length=256)
+    hole: str | None = Field(default=None, pattern="^(small|medium|large)$")
+    shape: str = Field(default="square", pattern="^(square|circle)$")
+    tz_offset: int = Field(default=0, ge=-840, le=720)
+
+
 @app.get("/api/qr")
 @limiter.limit("30/minute")
 async def generate_qr(
@@ -103,8 +122,19 @@ async def generate_qr(
     return Response(content=svg, media_type="image/svg+xml", headers=headers)
 
 
+@app.post("/api/qr/wifi")
+@limiter.limit("30/minute")
+async def generate_wifi_qr(request: Request, body: WifiQrRequest):
+    security = "WPA" if body.password else "nopass"
+    wifi_uri = f"WIFI:T:{security};S:{body.ssid};P:{body.password};;"
+    svg = build_svg_cached(wifi_uri, body.hole, body.shape)
+    await _increment_daily_counter(body.tz_offset)
+    return Response(content=svg, media_type="image/svg+xml")
+
+
 @app.get("/api/stats/today")
-async def stats_today(tz_offset: int = Query(0, ge=-840, le=720)):
+@limiter.limit("60/minute")
+async def stats_today(request: Request, tz_offset: int = Query(0, ge=-840, le=720)):
     local_date = _local_date_from_tz_offset(tz_offset)
     key = f"qr:count:{local_date.isoformat()}"
     try:

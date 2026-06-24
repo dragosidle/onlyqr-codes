@@ -81,6 +81,11 @@ function extractWifiSsid(wifiUri) {
 	return match ? match[1] : wifiUri
 }
 
+function extractWifiPassword(wifiUri) {
+	const match = wifiUri.match(/;P:([^;]*)/)
+	return match ? match[1] : ''
+}
+
 function midTruncate(str, max = 35) {
 	if (str.length <= max) return str
 	const half = Math.floor((max - 1) / 2)
@@ -321,8 +326,18 @@ export default function App() {
 		setError('')
 		setLoading(true)
 		try {
-			const params = new URLSearchParams({ url: value, tz_offset: TZ_OFFSET })
-			const res = await fetch(`/api/qr?${params.toString()}`)
+			let res
+			if (qrType === 'Wifi') {
+				// POST credentials so they never appear in server logs or request URLs.
+				res = await fetch('/api/qr/wifi', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ ssid: wifiSsid.trim(), password: wifiPassword.trim(), tz_offset: TZ_OFFSET }),
+				})
+			} else {
+				const params = new URLSearchParams({ url: value, tz_offset: TZ_OFFSET })
+				res = await fetch(`/api/qr?${params.toString()}`)
+			}
 			if (!res.ok) throw new Error(`Server returned ${res.status}`)
 			const none = await res.text()
 			setDomains((prev) =>
@@ -355,8 +370,23 @@ export default function App() {
 		setPunchingUrl(url)
 		setShakingPunchUrl(url)
 		try {
-			const params = new URLSearchParams({ url, hole: 'large', shape: 'square', tz_offset: TZ_OFFSET })
-			const res = await fetch(`/api/qr?${params.toString()}`)
+			let res
+			if (url.startsWith('WIFI:')) {
+				res = await fetch('/api/qr/wifi', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						ssid: extractWifiSsid(url),
+						password: extractWifiPassword(url),
+						hole: 'large',
+						shape: 'square',
+						tz_offset: TZ_OFFSET,
+					}),
+				})
+			} else {
+				const params = new URLSearchParams({ url, hole: 'large', shape: 'square', tz_offset: TZ_OFFSET })
+				res = await fetch(`/api/qr?${params.toString()}`)
+			}
 			if (!res.ok) throw new Error(`Server returned ${res.status}`)
 			const punched = await res.text()
 			setPunchedThisSession(true)
