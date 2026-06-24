@@ -181,6 +181,7 @@ export default function App() {
 	const [shakingUrl, setShakingUrl] = useState('')
 	const [punchingUrl, setPunchingUrl] = useState('') // domain whose punch variant is being fetched
 	const [shakingPunchUrl, setShakingPunchUrl] = useState('')
+	const [swingingPunchUrl, setSwingingPunchUrl] = useState('')
 	const [punchNoticeDismissed, setPunchNoticeDismissed] = useState(false)
 	const [isDesktop, setIsDesktop] = useState(() => window.matchMedia('(min-width: 600px)').matches)
 	useEffect(() => {
@@ -703,8 +704,12 @@ export default function App() {
 														</div>
 
 														<button
-															className={`secondary copy-svg-btn${punched ? ' no-icon' : ''}`}
-															onClick={() => togglePunch(d.url)}
+															className={`secondary copy-svg-btn${punched ? ' no-icon' : ''}${swingingPunchUrl === d.url ? ' punching' : ''}`}
+															onClick={() => {
+																if (!punched) setSwingingPunchUrl(d.url)
+																togglePunch(d.url)
+															}}
+															onAnimationEnd={() => setSwingingPunchUrl('')}
 															disabled={punchingUrl === d.url}
 															aria-pressed={punched}
 															data-visitors-event='punch-btn'>
