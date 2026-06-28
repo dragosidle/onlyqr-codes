@@ -19,7 +19,7 @@ import {
 } from './icons'
 import GenerateButton from './GenerateButton'
 import ClearButton from './ClearButton'
-import trollImg from './troll.avif' // bundled by Vite -> correct hashed URL in dev & prod
+import trollImg from './troll-shader-2.png'
 import aliDittherImg from './ali-ditther.avif'
 
 // JS getTimezoneOffset() returns minutes-behind-UTC (negative for UTC+ zones).
