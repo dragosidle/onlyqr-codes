@@ -71,7 +71,7 @@ volumes:
   valkey-data:
 
 networks:
-  # The shared edge network owned by the Traefik stack (~/traefik).
+  # The shared edge network owned by the Traefik stack.
   # Only `prod` joins it; `dev` and `valkey` stay on the project's default network.
   traefik-public:
     external: true
