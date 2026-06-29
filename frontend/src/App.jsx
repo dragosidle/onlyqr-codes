@@ -21,6 +21,8 @@ import GenerateButton from './GenerateButton'
 import ClearButton from './ClearButton'
 import trollImg from './troll-shader-2.png'
 import aliDittherImg from './ali-ditther.avif'
+import onlyQrExampleImg from './only-qr-example.avif'
+import othersQrExampleImg from './others-qr-example.avif'
 
 // JS getTimezoneOffset() returns minutes-behind-UTC (negative for UTC+ zones).
 // Computed once at module load — DST transitions mid-session are rare enough to ignore.
@@ -334,7 +336,11 @@ export default function App() {
 				res = await fetch('/api/qr/wifi', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ ssid: wifiSsid.trim(), password: wifiPassword.trim(), tz_offset: TZ_OFFSET }),
+					body: JSON.stringify({
+						ssid: wifiSsid.trim(),
+						password: wifiPassword.trim(),
+						tz_offset: TZ_OFFSET,
+					}),
 				})
 			} else {
 				const params = new URLSearchParams({ url: value, tz_offset: TZ_OFFSET })
@@ -387,7 +393,12 @@ export default function App() {
 					}),
 				})
 			} else {
-				const params = new URLSearchParams({ url, hole: 'large', shape: 'square', tz_offset: TZ_OFFSET })
+				const params = new URLSearchParams({
+					url,
+					hole: 'large',
+					shape: 'square',
+					tz_offset: TZ_OFFSET,
+				})
 				res = await fetch(`/api/qr?${params.toString()}`)
 			}
 			if (!res.ok) throw new Error(`Server returned ${res.status}`)
@@ -616,7 +627,9 @@ export default function App() {
 										dragConstraints={{ left: -99999, right: 99999 }}
 										dragElastic={0}
 										dragMomentum={false}
-										onDragStart={() => { isDraggingRef.current = true }}
+										onDragStart={() => {
+											isDraggingRef.current = true
+										}}
 										onDragEnd={(_, info) => {
 											const track = trackRef.current
 											if (!track) return
@@ -631,7 +644,9 @@ export default function App() {
 													nearestUrl = url
 												}
 											}
-											requestAnimationFrame(() => { isDraggingRef.current = false })
+											requestAnimationFrame(() => {
+												isDraggingRef.current = false
+											})
 											if (!nearestUrl) return
 											if (nearestUrl !== activeUrl) {
 												setActiveUrl(nearestUrl)
@@ -665,7 +680,9 @@ export default function App() {
 														animate={{ opacity: 1, scale: isActive ? 1 : 0.9 }}
 														exit={{ opacity: 0, scale: 0.9 }}
 														transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-														onClick={() => !isDraggingRef.current && !isActive && setActiveUrl(d.url)}>
+														onClick={() =>
+															!isDraggingRef.current && !isActive && setActiveUrl(d.url)
+														}>
 														<div className='chip-row'>
 															<button
 																type='button'
@@ -804,6 +821,31 @@ export default function App() {
 						Rounding the corners is just visual noise dressed up as customization.
 					</p>
 					<p>Old school by design, enjoy it!</p>
+				</div>
+			</section>
+
+			<section className='qr-examples'>
+				<div className='qr-examples-inner'>
+					<img
+						src={othersQrExampleImg}
+						alt='Other QR example'
+						className='qr-example qr-example--others'
+					/>
+					<p className='qr-examples-caption'>
+						Most generators produce SVGs made of hundreds of individual squares. Onlyqr.codes merges
+						them all into a single unified shape before rendering. No stacked rectangles, no hidden
+						seams. Logo holes are real cutouts baked into the geometry, not white boxes covering
+						what's underneath. One clean path that scales perfectly.
+					</p>
+					<img
+						src={onlyQrExampleImg}
+						alt='OnlyQR example'
+						className='qr-example qr-example--only'
+					/>
+					<p className='qr-examples-caption'>
+						Because everything resolves to a single <code>&lt;path&gt;</code> element, the output
+						file is a fraction of the size you'd get from a traditional rect-based generator.
+					</p>
 				</div>
 			</section>
 

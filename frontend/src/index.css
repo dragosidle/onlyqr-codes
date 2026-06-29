@@ -305,7 +305,6 @@ body {
 	.qr-track {
 		gap: 8px;
 	}
-
 }
 
 /* Download button, inside .qr-actions container. */
@@ -959,7 +958,7 @@ button.chip-delete {
 }
 
 .manifesto .inner {
-	max-width: 560px;
+	max-width: 860px;
 }
 
 .manifesto p {
@@ -977,6 +976,51 @@ button.chip-delete {
 .manifesto .manifesto-sign {
 	color: #555555;
 	font-style: italic;
+}
+
+.qr-examples {
+	width: 100%;
+	padding: 24px 24px 128px 24px;
+	overflow-x: clip;
+	border-top: 1px solid #e8e8e8;
+}
+
+.qr-examples-inner {
+	margin: 0 auto;
+	max-width: 860px;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 40px;
+}
+
+.qr-example {
+	display: block;
+	height: 400px;
+	width: auto;
+}
+
+.qr-examples-caption {
+	margin: 0;
+	font-size: 1.2rem;
+	line-height: 1.7;
+	color: #888888;
+	font-weight: 400;
+}
+
+.qr-example--others {
+	max-width: none;
+	height: 380px;
+}
+
+@media (max-width: 600px) {
+	.qr-example {
+		height: 180px;
+	}
+
+	.qr-example--others {
+		height: 160px;
+	}
 }
 
 /* Floating punch-hole disclaimer card */
