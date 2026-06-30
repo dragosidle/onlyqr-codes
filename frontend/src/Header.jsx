@@ -8,7 +8,7 @@ export default function Header() {
 			<div className='inner' style={{ position: 'relative' }}>
 				<Link to='/about' className='about-btn'>
 					<IconBadgeAlert size={16} />
-					About
+					<span>About</span>
 				</Link>
 				<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', margin: '0 auto' }}>
 					<Link id='page-title' to='/' style={{ display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
