@@ -457,6 +457,35 @@ body {
 	}
 }
 
+.about-btn {
+	position: absolute;
+	left: 24px;
+	top: 50%;
+	translate: 0 -50%;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 12px;
+	border-radius: 0;
+	border: none;
+	background: none;
+	box-shadow: none;
+	color: #555555;
+	font-size: 14px;
+	font-weight: 400;
+	cursor: pointer;
+	white-space: nowrap;
+	opacity: 0.8;
+	text-decoration: none;
+	transition: opacity 150ms ease;
+}
+
+@media (hover: hover) {
+	.about-btn:hover {
+		opacity: 1;
+	}
+}
+
 .input-with-action {
 	-webkit-tap-highlight-color: transparent;
 	position: relative;
@@ -954,7 +983,6 @@ button.chip-delete {
 .manifesto {
 	width: 100%;
 	padding: 80px 24px 100px;
-	border-top: 1px solid #e8e8e8;
 }
 
 .manifesto .inner {

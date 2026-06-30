@@ -19,7 +19,6 @@ import {
 } from './icons'
 import GenerateButton from './GenerateButton'
 import ClearButton from './ClearButton'
-import trollImg from './troll-shader-2.png'
 import aliDittherImg from './ali-ditther.avif'
 import onlyQrExampleImg from './only-qr-example.avif'
 import othersQrExampleImg from './others-qr-example.avif'
@@ -476,29 +475,6 @@ export default function App() {
 
 	return (
 		<>
-			<div className='above-fold'>
-				<header className='site-header'>
-					<div className='inner'>
-						<div className='header-left'>
-							<div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-								<img
-									src={trollImg}
-									alt=''
-									style={{ display: 'block', width: '72px', height: '72px' }}
-								/>
-								<p className='brand' style={{ margin: 0 }}>
-									<span style={{ color: '#02AFEF' }}>Only</span>
-									<span style={{ color: '#008CD0' }}>QR.codes</span>
-								</p>
-							</div>
-							<h1 className='site-subtitle'>Free QR code generator for designers & developers</h1>
-							<p className='value-prop'>
-								No sign-ups, no paywall, no pointless customization, just good old SVGs.
-							</p>
-						</div>
-					</div>
-				</header>
-
 				<main className='hero'>
 					<div className='app-layout'>
 						<div className='controls-col'>
@@ -798,56 +774,6 @@ export default function App() {
 						<NumberFlow className='today-count' value={todayCount ?? 0} /> codes generated today
 					</p>
 				)}
-			</div>
-
-			<section className='manifesto'>
-				<div className='inner'>
-					<p>
-						Most QR code tools want you to create an account, host your files, track your scans, and
-						pick from seventeen color schemes. That's not a QR generator anymore, that's a platform
-						trying to lock you in.
-					</p>
-					<p>This tool does one thing: it takes a string and turns it into a QR code. That's it.</p>
-					<p>
-						No sign-up, no file hosting, no analytics, no PNG or JPG, no "premium export" Just a
-						clean SVG file. The only format a designer or developer actually needs. Scalable to any
-						size, ready to drop straight into Figma, Illustrator, or your codebase.
-					</p>
-					<p>
-						The QR code itself is generated the way it was meant to look: sharp, square dots on a
-						clean grid. Rounded dots are a design trend that serves no one. They don't improve
-						scannability, they don't make the code more legible, and they certainly don't make it
-						more "on brand." A QR code is a machine-readable pattern, not a moodboard element.
-						Rounding the corners is just visual noise dressed up as customization.
-					</p>
-					<p>Old school by design, enjoy it!</p>
-				</div>
-			</section>
-
-			<section className='qr-examples'>
-				<div className='qr-examples-inner'>
-					<img
-						src={othersQrExampleImg}
-						alt='Other QR example'
-						className='qr-example qr-example--others'
-					/>
-					<p className='qr-examples-caption'>
-						Most generators produce SVGs made of hundreds of individual squares. Onlyqr.codes merges
-						them all into a single unified shape before rendering. No stacked rectangles, no hidden
-						seams. Logo holes are real cutouts baked into the geometry, not white boxes covering
-						what's underneath. One clean path that scales perfectly.
-					</p>
-					<img
-						src={onlyQrExampleImg}
-						alt='OnlyQR example'
-						className='qr-example qr-example--only'
-					/>
-					<p className='qr-examples-caption'>
-						Because everything resolves to a single <code>&lt;path&gt;</code> element, the output
-						file is a fraction of the size you'd get from a traditional rect-based generator.
-					</p>
-				</div>
-			</section>
 
 			<AnimatePresence>
 				{showPunchNotice && (
