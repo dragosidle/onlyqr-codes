@@ -51,41 +51,54 @@ _redis = aioredis.from_url(
 )
 
 
-def _local_date_from_tz_offset(tz_offset: int) -> datetime.date:
-    """Return the viewer's local calendar date given their JS getTimezoneOffset() value.
+# Generations are tallied per UTC hour, not per calendar day. This lets each
+# viewer's "today" total be reconstructed for their own timezone at read time
+# (sum the hourly buckets since their local midnight) without one shared
+# day-bucket leaking counts between timezones.
+_HOUR_BUCKET_TTL = 48 * 3600  # keep enough history for any offset (UTC-12..+14)
 
-    JS getTimezoneOffset() returns minutes-behind-UTC (negative for UTC+ zones),
-    so subtracting it from UTC gives local time: UTC+9 → -540, UTC-5 → 300.
-    """
+
+def _hour_bucket(dt: datetime.datetime) -> str:
+    return dt.strftime("%Y-%m-%dT%H")
+
+
+async def _increment_daily_counter() -> None:
     utc_now = datetime.datetime.now(datetime.timezone.utc)
-    return (utc_now - datetime.timedelta(minutes=tz_offset)).date()
-
-
-def _key_expiry_for_date(local_date: datetime.date) -> int:
-    """Unix timestamp when a calendar-date key should expire.
-
-    UTC-12 (IDLW) is the last timezone to finish any given calendar date.
-    Its midnight equals noon UTC the following day, so we expire then to
-    keep the key alive for every viewer still in that date.
-    """
-    next_day = local_date + datetime.timedelta(days=1)
-    expiry = datetime.datetime(
-        next_day.year, next_day.month, next_day.day,
-        12, 0, 0, tzinfo=datetime.timezone.utc,
-    )
-    return int(expiry.timestamp())
-
-
-async def _increment_daily_counter(tz_offset: int) -> None:
-    local_date = _local_date_from_tz_offset(tz_offset)
-    key = f"qr:count:{local_date.isoformat()}"
+    key = f"qr:count:h:{_hour_bucket(utc_now)}"
     try:
         pipe = _redis.pipeline()
         pipe.incr(key)
-        pipe.expireat(key, _key_expiry_for_date(local_date))
+        pipe.expire(key, _HOUR_BUCKET_TTL)
         await pipe.execute()
     except Exception:
         pass  # non-critical — counter silently skipped if Valkey is down
+
+
+async def _count_since_local_midnight(tz_offset: int) -> int:
+    """Sum hourly buckets from the viewer's local midnight (in their own
+    timezone) through the current UTC hour.
+
+    tz_offset is JS getTimezoneOffset(): minutes UTC is ahead of local time,
+    so local = utc - tz_offset minutes, and utc = local + tz_offset minutes.
+    """
+    utc_now = datetime.datetime.now(datetime.timezone.utc)
+    local_now = utc_now - datetime.timedelta(minutes=tz_offset)
+    local_midnight = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+    start_utc = local_midnight + datetime.timedelta(minutes=tz_offset)
+
+    start_hour = start_utc.replace(minute=0, second=0, microsecond=0)
+    end_hour = utc_now.replace(minute=0, second=0, microsecond=0)
+    hours = int((end_hour - start_hour).total_seconds() // 3600) + 1
+    keys = [
+        f"qr:count:h:{_hour_bucket(start_hour + datetime.timedelta(hours=i))}"
+        for i in range(hours)
+    ]
+
+    try:
+        values = await _redis.mget(keys)
+        return sum(int(v) for v in values if v is not None)
+    except Exception:
+        return 0
 
 
 @lru_cache(maxsize=512)
@@ -100,7 +113,6 @@ class WifiQrRequest(BaseModel):
     password: str = Field(default="", max_length=256)
     hole: str | None = Field(default=None, pattern="^(small|medium|large)$")
     shape: str = Field(default="square", pattern="^(square|circle)$")
-    tz_offset: int = Field(default=0, ge=-840, le=720)
 
 
 @app.get("/api/qr")
@@ -110,12 +122,11 @@ async def generate_qr(
     url: str = Query(..., min_length=1, max_length=500),
     hole: str | None = Query(None, pattern="^(small|medium|large)$"),
     shape: str = Query("square", pattern="^(square|circle)$"),
-    tz_offset: int = Query(0, ge=-840, le=720),
 ):
     if not url.startswith(("http://", "https://")):
         url = "https://" + url
     svg = build_svg_cached(url, hole, shape)
-    await _increment_daily_counter(tz_offset)
+    await _increment_daily_counter()
     headers = {
         "Content-Disposition": f'inline; filename="qr-{make_filename(url)}.svg"'
     }
@@ -128,20 +139,15 @@ async def generate_wifi_qr(request: Request, body: WifiQrRequest):
     security = "WPA" if body.password else "nopass"
     wifi_uri = f"WIFI:T:{security};S:{body.ssid};P:{body.password};;"
     svg = build_svg_cached(wifi_uri, body.hole, body.shape)
-    await _increment_daily_counter(body.tz_offset)
+    await _increment_daily_counter()
     return Response(content=svg, media_type="image/svg+xml")
 
 
 @app.get("/api/stats/today")
 @limiter.limit("60/minute")
 async def stats_today(request: Request, tz_offset: int = Query(0, ge=-840, le=720)):
-    local_date = _local_date_from_tz_offset(tz_offset)
-    key = f"qr:count:{local_date.isoformat()}"
-    try:
-        val = await _redis.get(key)
-        return JSONResponse({"count": int(val or 0)})
-    except Exception:
-        return JSONResponse({"count": 0})
+    count = await _count_since_local_midnight(tz_offset)
+    return JSONResponse({"count": count})
 
 
 # Production: serve the built React app from this same process (same origin, so

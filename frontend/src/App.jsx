@@ -23,8 +23,9 @@ import aliDittherImg from './ali-ditther.avif'
 import onlyQrExampleImg from './only-qr-example.avif'
 import othersQrExampleImg from './others-qr-example.avif'
 
-// JS getTimezoneOffset() returns minutes-behind-UTC (negative for UTC+ zones).
-// Computed once at module load — DST transitions mid-session are rare enough to ignore.
+// JS getTimezoneOffset() returns minutes UTC is ahead of local time (negative
+// for UTC+ zones). Sent only when reading today's count, so each viewer sees
+// the count since their own local midnight.
 const TZ_OFFSET = new Date().getTimezoneOffset()
 
 // Persisted multi-domain history. Each entry is
@@ -338,11 +339,10 @@ export default function App() {
 					body: JSON.stringify({
 						ssid: wifiSsid.trim(),
 						password: wifiPassword.trim(),
-						tz_offset: TZ_OFFSET,
 					}),
 				})
 			} else {
-				const params = new URLSearchParams({ url: value, tz_offset: TZ_OFFSET })
+				const params = new URLSearchParams({ url: value })
 				res = await fetch(`/api/qr?${params.toString()}`)
 			}
 			if (!res.ok) throw new Error(`Server returned ${res.status}`)
@@ -388,7 +388,6 @@ export default function App() {
 						password: extractWifiPassword(url),
 						hole: 'large',
 						shape: 'square',
-						tz_offset: TZ_OFFSET,
 					}),
 				})
 			} else {
@@ -396,7 +395,6 @@ export default function App() {
 					url,
 					hole: 'large',
 					shape: 'square',
-					tz_offset: TZ_OFFSET,
 				})
 				res = await fetch(`/api/qr?${params.toString()}`)
 			}
