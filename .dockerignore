@@ -11,6 +11,13 @@ venv
 # Generated QR output
 qr-*.svg
 
+# Secrets / local config
+.env
+.env.*
+!.env.example
+
 # Misc
 .git
 .DS_Store
+.claude
+.playwright-mcp
