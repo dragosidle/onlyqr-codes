@@ -5,7 +5,6 @@ placement). Web tool built on the original desktop script (`segno-qr-code.py`).
 
 - **Backend:** FastAPI wrapping the pure core in `qr.py` (`segno` + `shapely`).
 - **Frontend:** Vite + React (`frontend/`).
-- **Architecture / roadmap:** Obsidian `OnlyQR/02 - Architecture & Deployment Plan`.
 
 This is **Milestone 1: local app**. Docker, nginx/SSL, VPS deploy, and rate limiting
 are the next milestone.
@@ -91,14 +90,14 @@ curl "http://localhost:8000/api/qr?url=example.com&hole=medium&shape=circle" -o 
 
 ## Files
 
-| Path | Role |
-|---|---|
-| `qr.py` | Pure core: `build_svg()`, geometry merge, filename helper. No GUI, no file I/O. |
-| `main.py` | FastAPI app + `/api/qr` endpoint + caching. |
-| `requirements.txt` | Backend deps. |
-| `frontend/` | Vite + React UI. |
-| `Dockerfile` | `dev` (backend only) + `prod` (multi-stage: builds frontend, serves frontend + API) targets. |
-| `Dockerfile.dev` | Combined dev image (Python + Node) for the single dev container. |
-| `dev-entrypoint.sh` | Runs uvicorn + Vite together in the dev container. |
-| `docker-compose.yml` | The one compose file: `dev` + `prod` (profiled) services + shared Valkey. |
-| `segno-qr-code.py` | Original Tkinter desktop tool (unchanged reference). |
+| Path                 | Role                                                                                         |
+| -------------------- | -------------------------------------------------------------------------------------------- |
+| `qr.py`              | Pure core: `build_svg()`, geometry merge, filename helper. No GUI, no file I/O.              |
+| `main.py`            | FastAPI app + `/api/qr` endpoint + caching.                                                  |
+| `requirements.txt`   | Backend deps.                                                                                |
+| `frontend/`          | Vite + React UI.                                                                             |
+| `Dockerfile`         | `dev` (backend only) + `prod` (multi-stage: builds frontend, serves frontend + API) targets. |
+| `Dockerfile.dev`     | Combined dev image (Python + Node) for the single dev container.                             |
+| `dev-entrypoint.sh`  | Runs uvicorn + Vite together in the dev container.                                           |
+| `docker-compose.yml` | The one compose file: `dev` + `prod` (profiled) services + shared Valkey.                    |
+| `segno-qr-code.py`   | Original Tkinter desktop tool (unchanged reference).                                         |
