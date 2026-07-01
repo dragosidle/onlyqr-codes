@@ -302,6 +302,7 @@ export default function App() {
 	}, [])
 
 	const generate = async () => {
+		window.visitors?.track('generate-btn')
 		let value
 		if (qrType === 'Wifi') {
 			if (!wifiSsid.trim()) {

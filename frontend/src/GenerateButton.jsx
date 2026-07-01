@@ -25,7 +25,6 @@ export default function GenerateButton({ onClick, disabled, hasText, shaking, on
       onClick={onClick}
       disabled={disabled}
       onAnimationEnd={onShakeEnd}
-      data-visitors-event="generate-btn"
       style={{
         display: "flex",
         padding: "0.625rem 0.75rem 0.625rem 1rem",
