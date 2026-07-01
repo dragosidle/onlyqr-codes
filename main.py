@@ -22,8 +22,25 @@ from slowapi.util import get_remote_address
 
 from qr import HOLE_RATIOS, build_svg, make_filename
 
+def _rate_limit_client_ip(request: Request) -> str:
+    """Rate-limit key: the real client IP, never a client-forgeable one.
+
+    In production the app is reachable only through Traefik (host port bound
+    to 127.0.0.1; container on the traefik-public network). Traefik appends
+    the connecting socket's IP as the LAST X-Forwarded-For entry whether or
+    not it trusts incoming forwarded headers, so the rightmost entry is
+    authoritative — leftmost entries can be forged by the client and must not
+    be used. Without the header (dev, localhost debugging) fall back to the
+    direct socket address.
+    """
+    xff = request.headers.get("x-forwarded-for")
+    if xff:
+        return xff.rsplit(",", 1)[-1].strip()
+    return get_remote_address(request)
+
+
 limiter = Limiter(
-    key_func=get_remote_address,
+    key_func=_rate_limit_client_ip,
     storage_uri=os.getenv("REDIS_URL", "redis://localhost:6379"),
 )
 
