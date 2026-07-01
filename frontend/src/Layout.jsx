@@ -1,22 +1,16 @@
+import { Fragment } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import Header from './Header.jsx'
 
 export default function Layout() {
 	const { pathname } = useLocation()
 
-	if (pathname === '/') {
-		return (
-			<div className='above-fold'>
-				<Header />
-				<Outlet />
-			</div>
-		)
-	}
+	const Wrapper = pathname === '/' ? 'div' : Fragment
 
 	return (
-		<>
+		<Wrapper {...(pathname === '/' ? { className: 'above-fold' } : {})}>
 			<Header />
 			<Outlet />
-		</>
+		</Wrapper>
 	)
 }

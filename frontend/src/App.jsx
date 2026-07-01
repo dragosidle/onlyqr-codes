@@ -769,10 +769,14 @@ export default function App() {
 					</div>
 				</main>
 				{todayCount !== null && (
-					<p className='today-counter'>
+					<motion.p
+						className='today-counter'
+						initial={{ opacity: 0, y: 16, scale: 0.96 }}
+						animate={{ opacity: 1, y: 0, scale: 1 }}
+						transition={{ duration: 0.25, ease: 'easeOut' }}>
 						<span key={dotKey} className='today-dot' />
 						<NumberFlow className='today-count' value={todayCount ?? 0} /> codes generated today
-					</p>
+					</motion.p>
 				)}
 
 			<AnimatePresence>
