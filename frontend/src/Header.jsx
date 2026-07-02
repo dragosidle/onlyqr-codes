@@ -15,11 +15,11 @@ export default function Header() {
 	const [starCount, setStarCount] = useState(null)
 
 	useEffect(() => {
-		fetch(`https://api.github.com/repos/${GITHUB_REPO}`)
+		fetch('/api/github/stars')
 			.then(res => (res.ok ? res.json() : null))
 			.then(data => {
-				if (data && typeof data.stargazers_count === 'number') {
-					setStarCount(data.stargazers_count)
+				if (data && typeof data.count === 'number') {
+					setStarCount(data.count)
 				}
 			})
 			.catch(() => {})

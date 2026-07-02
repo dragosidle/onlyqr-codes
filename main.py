@@ -10,6 +10,7 @@ import os
 from functools import lru_cache
 from pathlib import Path
 
+import httpx
 import redis.asyncio as aioredis
 from fastapi import FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -66,6 +67,14 @@ _redis = aioredis.from_url(
     decode_responses=True,
     socket_connect_timeout=1,
 )
+
+_GITHUB_REPO = "dragosidle/onlyqr-codes"
+_GH_STARS_KEY = "gh:stars:count"
+_GH_STARS_FALLBACK_KEY = "gh:stars:count:last"
+_GH_STARS_TTL = 900  # 15 min — GitHub's unauthenticated limit is 60/hour per IP,
+# so this endpoint is the only thing that ever calls it, no matter how many
+# visitors hit the site.
+_http_client = httpx.AsyncClient(timeout=5.0)
 
 
 # Generations are tallied per UTC hour, not per calendar day. This lets each
@@ -165,6 +174,46 @@ async def generate_wifi_qr(request: Request, body: WifiQrRequest):
 async def stats_today(request: Request, tz_offset: int = Query(0, ge=-840, le=720)):
     count = await _count_since_local_midnight(tz_offset)
     return JSONResponse({"count": count})
+
+
+@app.get("/api/github/stars")
+@limiter.limit("60/minute")
+async def github_stars(request: Request):
+    """Repo star count, cached in Redis. Refreshed at most once per
+    _GH_STARS_TTL by whichever request happens to find the cache cold — if
+    that GitHub call fails, fall back to the last known count instead of
+    surfacing an error to the visitor.
+    """
+    try:
+        cached = await _redis.get(_GH_STARS_KEY)
+        if cached is not None:
+            return JSONResponse({"count": int(cached)})
+    except Exception:
+        pass
+
+    try:
+        resp = await _http_client.get(f"https://api.github.com/repos/{_GITHUB_REPO}")
+        resp.raise_for_status()
+        count = resp.json()["stargazers_count"]
+        try:
+            pipe = _redis.pipeline()
+            pipe.set(_GH_STARS_KEY, count, ex=_GH_STARS_TTL)
+            pipe.set(_GH_STARS_FALLBACK_KEY, count)
+            await pipe.execute()
+        except Exception:
+            pass
+        return JSONResponse({"count": count})
+    except Exception:
+        pass
+
+    try:
+        fallback = await _redis.get(_GH_STARS_FALLBACK_KEY)
+        if fallback is not None:
+            return JSONResponse({"count": int(fallback)})
+    except Exception:
+        pass
+
+    return JSONResponse({"count": None})
 
 
 # Production: serve the built React app from this same process (same origin, so
