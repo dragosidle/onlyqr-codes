@@ -1141,8 +1141,10 @@ button.chip-delete {
 .punch-notice-image {
 	display: block;
 	width: 100%;
+	aspect-ratio: 901 / 608;
 	margin-top: 14px;
 	border-radius: 8px;
+	background: #f4f4f4;
 	user-select: none;
 	pointer-events: none;
 }

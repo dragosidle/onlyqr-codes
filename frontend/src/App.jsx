@@ -780,27 +780,30 @@ export default function App() {
 					</motion.p>
 				)}
 
-			<AnimatePresence>
-				{showPunchNotice && (
-					<motion.div
-						className='punch-notice'
-						initial={{ x: isDesktop ? 0 : '-50%', y: 24, opacity: 0 }}
-						animate={{ x: isDesktop ? 0 : '-50%', y: 0, opacity: 1 }}
-						exit={{ x: isDesktop ? 0 : '-50%', y: 24, opacity: 0 }}
-						transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}>
-						<button className='punch-notice-close' onClick={dismissPunchNotice}>
-							Close
-						</button>
-						<h3 className='punch-notice-title'>Punching is safe.</h3>
-						<p className='punch-notice-body'>
-							The QR is regenerated from scratch. Center modules are never drawn, not erased. QR
-							codes at high error correction (level&nbsp;H) tolerate up to 30% module loss. The hole
-							sits well within that threshold, so your code scans just as reliably.
-						</p>
-						<img src={aliDittherImg} alt='' className='punch-notice-image' />
-					</motion.div>
-				)}
-			</AnimatePresence>
+			{/* Always mounted (not AnimatePresence'd) so the image starts downloading on page
+			    load rather than when the notice first becomes relevant, avoiding a pop-in
+			    jitter. It's positioned off-canvas via opacity/y and non-interactive until shown. */}
+			<motion.div
+				className='punch-notice'
+				initial={false}
+				animate={
+					showPunchNotice
+						? { x: isDesktop ? 0 : '-50%', y: 0, opacity: 1 }
+						: { x: isDesktop ? 0 : '-50%', y: 24, opacity: 0 }
+				}
+				transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+				style={{ pointerEvents: showPunchNotice ? 'auto' : 'none' }}>
+				<button className='punch-notice-close' onClick={dismissPunchNotice}>
+					Close
+				</button>
+				<h3 className='punch-notice-title'>Punching is safe.</h3>
+				<p className='punch-notice-body'>
+					The QR is regenerated from scratch. Center modules are never drawn, not erased. QR
+					codes at high error correction (level&nbsp;H) tolerate up to 30% module loss. The hole
+					sits well within that threshold, so your code scans just as reliably.
+				</p>
+				<img src={aliDittherImg} alt='' className='punch-notice-image' />
+			</motion.div>
 		</>
 	)
 }
