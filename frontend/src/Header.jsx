@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { IconBadgeAlert, IconGithub, IconStar, IconStats, LogoMark, LogoOnlyQR } from './icons'
+import { IconBadgeAlert, IconGithub, IconPublicStats, IconStar, LogoMark, LogoOnlyQR } from './icons'
 
 const GITHUB_REPO = 'dragosidle/onlyqr-codes'
 
@@ -70,8 +70,8 @@ export default function Header() {
 						rel='noopener noreferrer'
 						className='about-btn stats-btn'
 						data-visitors-event='stats-page'>
-						<IconStats size={16} />
-						<span>Stats</span>
+						<IconPublicStats size={16} />
+						<span>Public stats</span>
 					</a>
 					<a
 						href={`https://github.com/${GITHUB_REPO}`}
