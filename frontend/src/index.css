@@ -445,8 +445,7 @@ body {
 .about-btn {
 	position: absolute;
 	left: 24px;
-	top: 50%;
-	translate: 0 -50%;
+	top: 0;
 	display: flex;
 	align-items: center;
 	gap: 6px;
@@ -501,6 +500,17 @@ body {
 	.about-btn svg {
 		width: 22px;
 		height: 22px;
+	}
+}
+
+.stats-btn {
+	left: auto;
+	right: 24px;
+}
+
+@media (max-width: 800px) {
+	.stats-btn {
+		display: none;
 	}
 }
 

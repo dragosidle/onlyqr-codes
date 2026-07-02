@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { IconBadgeAlert, LogoMark, LogoOnlyQR } from './icons'
+import { IconBadgeAlert, IconStats, LogoMark, LogoOnlyQR } from './icons'
 
 export default function Header() {
 	const { pathname } = useLocation()
@@ -12,6 +12,14 @@ export default function Header() {
 					<IconBadgeAlert size={16} />
 					<span>{isAbout ? 'Exit' : 'About'}</span>
 				</Link>
+				<a
+					href='https://visitors.now/s/onlyqr.codes'
+					target='_blank'
+					rel='noopener noreferrer'
+					className='about-btn stats-btn'>
+					<IconStats size={16} />
+					<span>Stats</span>
+				</a>
 				<div
 					style={{
 						display: 'flex',
