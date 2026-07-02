@@ -6,14 +6,6 @@
 	font-display: swap;
 }
 
-@font-face {
-	font-family: 'Gardenia';
-	src: url('./Gardenia-ExtraBold Regular.otf') format('opentype');
-	font-weight: 800;
-	font-style: normal;
-	font-display: swap;
-}
-
 :root {
 	--bg: #f6f6f6;
 	--panel: #1a1d24;
@@ -91,13 +83,6 @@ body {
 	align-items: center;
 	gap: 3px;
 	margin: 0 auto;
-}
-
-.brand {
-	margin: 0;
-	font-family: 'Gardenia', sans-serif;
-	font-size: 40px;
-	font-weight: 800;
 }
 
 .site-subtitle {

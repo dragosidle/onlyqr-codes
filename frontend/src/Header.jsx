@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { IconBadgeAlert } from './icons'
+import { IconBadgeAlert, LogoOnlyQR } from './icons'
 import trollImg from './troll-shader-2.png'
 
 export default function Header() {
@@ -20,10 +20,7 @@ export default function Header() {
 							alt=''
 							style={{ display: 'block', width: '72px', height: '72px' }}
 						/>
-						<p className='brand' style={{ margin: 0 }}>
-							<span style={{ color: '#02AFEF' }}>Only</span>
-							<span style={{ color: '#008CD0' }}>QR.codes</span>
-						</p>
+						<LogoOnlyQR height={40} style={{ display: 'block' }} />
 					</Link>
 					<div className='header-left'>
 						<h1 className='site-subtitle'>Free QR code generator for designers&nbsp;&&nbsp;developers</h1>
