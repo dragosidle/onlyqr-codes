@@ -44,6 +44,9 @@ services:
     build:
       context: .
       target: prod # multi-stage Dockerfile: Node builds the React app, gunicorn serves app + API
+      args:
+        # Bake the git version into the image: APP_VERSION=$(git describe --tags) docker compose build prod
+        APP_VERSION: ${APP_VERSION:-dev}
     container_name: onlyqr-codes-prod
     restart: always
     ports:

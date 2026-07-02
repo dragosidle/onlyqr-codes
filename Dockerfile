@@ -24,6 +24,9 @@ CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
 # ---- Prod: API + built frontend in one process ----
 FROM base AS prod
-ENV ENV=production
+# Version baked in at build time: APP_VERSION=$(git describe --tags) docker compose build prod
+ARG APP_VERSION=dev
+ENV ENV=production APP_VERSION=$APP_VERSION
+LABEL org.opencontainers.image.version=$APP_VERSION
 COPY --from=frontend-build /frontend/dist ./frontend/dist
 CMD ["gunicorn", "main:app", "-w", "5", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000"]
