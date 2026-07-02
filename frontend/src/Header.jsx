@@ -1,6 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { IconBadgeAlert, LogoOnlyQR } from './icons'
-import trollImg from './troll-shader-2.png'
+import { IconBadgeAlert, LogoMark, LogoOnlyQR } from './icons'
 
 export default function Header() {
 	const { pathname } = useLocation()
@@ -15,11 +14,7 @@ export default function Header() {
 				</Link>
 				<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', margin: '0 auto' }}>
 					<Link id='page-title' to='/' style={{ display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
-						<img
-							src={trollImg}
-							alt=''
-							style={{ display: 'block', width: '72px', height: '72px' }}
-						/>
+						<LogoMark height={72} style={{ display: 'block' }} />
 						<LogoOnlyQR height={40} style={{ display: 'block' }} />
 					</Link>
 					<div className='header-left'>
