@@ -1,13 +1,29 @@
 # OnlyQR
 
-Clean, single-`<path>` SVG QR codes with an optional centre punch hole (for logo
-placement). Web tool built on the original desktop script (`segno-qr-code.py`).
+**One string in, one QR code out — as a single-`<path>` SVG.** Live at
+[onlyqr.codes](https://onlyqr.codes).
+
+Most QR tools want an account, host your files, track your scans, and offer
+seventeen color schemes. This one does one thing: it takes a string and turns
+it into a QR code. No sign-up, no analytics on your codes, no "premium export" —
+just a clean SVG, the only format a designer or developer actually needs.
+
+Where it differs under the hood: most generators emit SVGs built from hundreds
+of stacked `<rect>` elements. OnlyQR encodes the matrix with `segno`, then uses
+`shapely` to union every module into one continuous geometry — rendered as
+exactly **one `<path>`**. No seams, no overdraw, a fraction of the file size,
+and it scales to any size before dropping straight into Figma, Illustrator, or
+your codebase. The optional centre hole (for a logo) is a real cutout
+subtracted from that geometry, not a white box covering what's underneath —
+and error-correction level **H** keeps the code scannable with up to 30% of it
+punched out.
+
+The dots are sharp squares on a clean grid, the way a machine-readable pattern
+was meant to look. Old school by design.
 
 - **Backend:** FastAPI wrapping the pure core in `qr.py` (`segno` + `shapely`).
 - **Frontend:** Vite + React (`frontend/`).
-
-This is **Milestone 1: local app**. Docker, nginx/SSL, VPS deploy, and rate limiting
-are the next milestone.
+- **Deploy:** one self-contained Docker container behind a Traefik edge proxy.
 
 ## Run locally
 
