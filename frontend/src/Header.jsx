@@ -14,7 +14,7 @@ export default function Header() {
 				</Link>
 				<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', margin: '0 auto' }}>
 					<Link id='page-title' to='/' style={{ display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
-						<LogoMark height={72} style={{ display: 'block' }} />
+						<LogoMark height={67} style={{ display: 'block' }} />
 						<LogoOnlyQR height={40} style={{ display: 'block' }} />
 					</Link>
 					<div className='header-left'>
