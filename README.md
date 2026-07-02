@@ -117,3 +117,17 @@ curl "http://localhost:8000/api/qr?url=example.com&hole=medium&shape=circle" -o 
 | `dev-entrypoint.sh`  | Runs uvicorn + Vite together in the dev container.                                           |
 | `docker-compose.yml` | The one compose file: `dev` + `prod` (profiled) services + shared Valkey.                    |
 | `segno-qr-code.py`   | Original Tkinter desktop tool (unchanged reference).                                         |
+
+## Third-party assets
+
+Not covered by this repository's MIT license:
+
+- **Switzer** typeface © [Indian Type Foundry](https://www.fontshare.com/fonts/switzer),
+  used under the [ITF Free Font License](https://www.fontshare.com/licenses/itf-ffl),
+  which permits use and self-hosting but not redistribution of the font files.
+  The `.ttf` is therefore not in this repo — `frontend/fetch-fonts.sh` downloads
+  it from Fontshare's official endpoint (runs automatically before `npm run dev`
+  / `npm run build`).
+- **`frontend/public/v.js`** © [visitors.now](https://visitors.now) — their
+  analytics client, self-hosted verbatim (their CDN does not support the CORS
+  headers needed for SRI).

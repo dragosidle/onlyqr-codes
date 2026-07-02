@@ -25,3 +25,6 @@ frontend/dist/
 .env
 .env.*
 !.env.example
+
+# Switzer font (ITF FFL forbids redistribution; fetched from Fontshare at build)
+frontend/src/Switzer-Variable.ttf

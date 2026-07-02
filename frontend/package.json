@@ -4,7 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "predev": "sh fetch-fonts.sh",
     "dev": "vite",
+    "prebuild": "sh fetch-fonts.sh",
     "build": "vite build",
     "preview": "vite preview"
   },

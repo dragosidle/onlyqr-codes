@@ -5,11 +5,16 @@
 
 # ---- Build the React frontend ----
 FROM node:22-slim AS frontend-build
+# curl + unzip for fetch-fonts.sh (npm prebuild): Switzer's license forbids
+# committing the font, so each build downloads it from Fontshare.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl unzip ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /frontend
 COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm ci
 COPY frontend/ ./
-RUN npm run build          # -> /frontend/dist
+RUN npm run build          # -> /frontend/dist (prebuild fetches Switzer first)
 
 # ---- Python base (shared deps) ----
 FROM python:3.12-slim AS base
