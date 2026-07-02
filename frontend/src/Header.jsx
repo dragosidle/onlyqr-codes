@@ -26,7 +26,7 @@ export default function Header() {
 						display: 'flex',
 						flexDirection: 'column',
 						alignItems: 'center',
-						gap: '3px',
+						gap: '12px',
 						margin: '0 auto',
 					}}>
 					<Link
