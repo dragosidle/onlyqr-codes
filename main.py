@@ -74,6 +74,9 @@ _GH_STARS_FALLBACK_KEY = "gh:stars:count:last"
 _GH_STARS_TTL = 900  # 15 min — GitHub's unauthenticated limit is 60/hour per IP,
 # so this endpoint is the only thing that ever calls it, no matter how many
 # visitors hit the site.
+_GH_VERSION_KEY = "gh:version:latest"
+_GH_VERSION_FALLBACK_KEY = "gh:version:latest:last"
+_GH_VERSION_TTL = 900
 _http_client = httpx.AsyncClient(timeout=5.0)
 
 
@@ -214,6 +217,50 @@ async def github_stars(request: Request):
         pass
 
     return JSONResponse({"count": None})
+
+
+@app.get("/api/github/version")
+@limiter.limit("60/minute")
+async def github_version(request: Request):
+    """Latest repo tag name, cached in Redis. Refreshed at most once per
+    _GH_VERSION_TTL by whichever request happens to find the cache cold — if
+    that GitHub call fails, fall back to the last known tag instead of
+    surfacing an error to the visitor.
+    """
+    try:
+        cached = await _redis.get(_GH_VERSION_KEY)
+        if cached is not None:
+            return JSONResponse({"version": cached})
+    except Exception:
+        pass
+
+    try:
+        resp = await _http_client.get(
+            f"https://api.github.com/repos/{_GITHUB_REPO}/tags", params={"per_page": 1}
+        )
+        resp.raise_for_status()
+        tags = resp.json()
+        version = tags[0]["name"] if tags else None
+        if version:
+            try:
+                pipe = _redis.pipeline()
+                pipe.set(_GH_VERSION_KEY, version, ex=_GH_VERSION_TTL)
+                pipe.set(_GH_VERSION_FALLBACK_KEY, version)
+                await pipe.execute()
+            except Exception:
+                pass
+        return JSONResponse({"version": version})
+    except Exception:
+        pass
+
+    try:
+        fallback = await _redis.get(_GH_VERSION_FALLBACK_KEY)
+        if fallback is not None:
+            return JSONResponse({"version": fallback})
+    except Exception:
+        pass
+
+    return JSONResponse({"version": None})
 
 
 # Production: serve the built React app from this same process (same origin, so

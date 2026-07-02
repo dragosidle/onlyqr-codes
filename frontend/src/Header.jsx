@@ -20,6 +20,7 @@ export default function Header() {
 	const { pathname } = useLocation()
 	const isAbout = pathname === '/about'
 	const [starCount, setStarCount] = useState(null)
+	const [version, setVersion] = useState(null)
 
 	useEffect(() => {
 		fetch('/api/github/stars')
@@ -27,6 +28,15 @@ export default function Header() {
 			.then((data) => {
 				if (data && typeof data.count === 'number') {
 					setStarCount(data.count)
+				}
+			})
+			.catch(() => {})
+
+		fetch('/api/github/version')
+			.then((res) => (res.ok ? res.json() : null))
+			.then((data) => {
+				if (data && typeof data.version === 'string') {
+					setVersion(data.version)
 				}
 			})
 			.catch(() => {})
@@ -59,7 +69,10 @@ export default function Header() {
 							cursor: 'pointer',
 						}}>
 						<LogoMark height={67} style={{ display: 'block' }} />
-						<LogoOnlyQR height={28} style={{ display: 'block', marginTop: '8px' }} />
+						<span style={{ position: 'relative', display: 'block', marginTop: '8px' }}>
+							<LogoOnlyQR height={28} style={{ display: 'block' }} />
+							{version !== null && <span className='header-version'>{version}</span>}
+						</span>
 					</Link>
 					<div className='header-subtitles'>
 						<h1 className='site-subtitle'>

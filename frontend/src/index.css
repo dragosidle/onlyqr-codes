@@ -530,6 +530,17 @@ body {
 	font-weight: 500;
 }
 
+.header-version {
+	position: absolute;
+	top: 100%;
+	right: 0;
+	margin-top: -4px;
+	font-size: 10px;
+	font-weight: 500;
+	color: #99999983;
+	white-space: nowrap;
+}
+
 @media (max-width: 1000px) {
 	.stats-btn {
 		display: none;
@@ -1187,10 +1198,10 @@ button.chip-delete {
 	pointer-events: none;
 }
 
-#page-title svg:first-of-type {
+#page-title > svg:first-of-type {
 	transition: transform 0.2s ease;
 }
 
-#page-title:hover svg:first-of-type {
+#page-title:hover > svg:first-of-type {
 	transform: rotate(-3deg);
 }
