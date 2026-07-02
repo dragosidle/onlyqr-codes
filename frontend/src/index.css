@@ -1146,3 +1146,11 @@ button.chip-delete {
 	user-select: none;
 	pointer-events: none;
 }
+
+#page-title svg:first-of-type {
+	transition: transform 0.2s ease;
+}
+
+#page-title:hover svg:first-of-type {
+	transform: rotate(-3deg);
+}
