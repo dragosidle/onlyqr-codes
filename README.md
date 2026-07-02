@@ -1,7 +1,19 @@
-# OnlyQR
+<!-- # OnlyQR codes -->
 
-**One string in, one QR code out — as a single-`<path>` SVG.** Live at
-[onlyqr.codes](https://onlyqr.codes).
+![OnlyQR](frontend/src/readme-banner.png)
+
+**TL;DR:** a free, no-signup QR code generator that outputs a single clean
+`<path>` SVG instead of hundreds of stacked rectangles — small, scalable, and ready to drop into design tools or code.
+
+Live at [onlyqr.codes](https://onlyqr.codes)
+
+- **No sign-up, no paywall** — open it, paste a string, get an SVG.
+- **One `<path>`, not hundreds of `<rect>`s** — smaller files, no seams or overdraw.
+- **True vector** — scales to any size, drops straight into Figma, Illustrator, or your codebase.
+- **Real cutout, not an overlay** — the optional centre hole for a logo is subtracted from the geometry itself.
+- **Still scans with a chunk missing** — error-correction level H tolerates up to 30% obstruction.
+- **No tracking on your codes** — nothing about what you generate is logged or sold.
+- **Self-hostable** — MIT-licensed, runs from a single Docker container, no vendor lock-in.
 
 Most QR tools want an account, host your files, track your scans, and offer
 seventeen color schemes. This one does one thing: it takes a string and turns
