@@ -530,6 +530,12 @@ body {
 	font-weight: 500;
 }
 
+@media (max-width: 1000px) {
+	.stats-btn {
+		display: none;
+	}
+}
+
 @media (max-width: 800px) {
 	.header-right {
 		display: none;

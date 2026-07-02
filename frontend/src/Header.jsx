@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { IconBadgeAlert, IconGithub, IconPublicStats, IconStar, LogoMark, LogoOnlyQR } from './icons'
+import {
+	IconBadgeAlert,
+	IconGithub,
+	IconPublicStats,
+	IconStar,
+	LogoMark,
+	LogoOnlyQR,
+} from './icons'
 
 const GITHUB_REPO = 'dragosidle/onlyqr-codes'
 
@@ -16,8 +23,8 @@ export default function Header() {
 
 	useEffect(() => {
 		fetch('/api/github/stars')
-			.then(res => (res.ok ? res.json() : null))
-			.then(data => {
+			.then((res) => (res.ok ? res.json() : null))
+			.then((data) => {
 				if (data && typeof data.count === 'number') {
 					setStarCount(data.count)
 				}
@@ -52,7 +59,7 @@ export default function Header() {
 							cursor: 'pointer',
 						}}>
 						<LogoMark height={67} style={{ display: 'block' }} />
-						<LogoOnlyQR height={40} style={{ display: 'block', marginTop: '16px' }} />
+						<LogoOnlyQR height={28} style={{ display: 'block', marginTop: '8px' }} />
 					</Link>
 					<div className='header-subtitles'>
 						<h1 className='site-subtitle'>
