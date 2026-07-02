@@ -16,7 +16,8 @@ export default function Header() {
 					href='https://visitors.now/s/onlyqr.codes'
 					target='_blank'
 					rel='noopener noreferrer'
-					className='about-btn stats-btn'>
+					className='about-btn stats-btn'
+					data-visitors-event='stats-page'>
 					<IconStats size={16} />
 					<span>Stats</span>
 				</a>
