@@ -50,24 +50,41 @@ def matrix_to_merged_geom(matrix, hole_geom=None):
 
 
 def geom_to_path_d(geom):
+    """Compact path data in module units: relative h/v commands, no
+    collinear vertices, integer coordinates (module edges always land on
+    the SCALE grid — whole modules are dropped at the hole, never clipped).
+    """
+    geom = geom.simplify(0)
+
+    def fmt(v):
+        v = v / SCALE
+        return str(int(v)) if v == int(v) else f"{v:g}"
+
     def ring_to_d(coords):
-        coords = list(coords)
-        parts = [f"M {coords[0][0]:.2f},{coords[0][1]:.2f}"]
-        for x, y in coords[1:-1]:
-            parts.append(f"L {x:.2f},{y:.2f}")
-        parts.append("Z")
-        return " ".join(parts)
+        coords = list(coords)[:-1]  # last point duplicates the first; z closes
+        px, py = coords[0]
+        parts = [f"M{fmt(px)} {fmt(py)}"]
+        for x, y in coords[1:]:
+            dx, dy = x - px, y - py
+            if dy == 0:
+                parts.append(f"h{fmt(dx)}")
+            elif dx == 0:
+                parts.append(f"v{fmt(dy)}")
+            else:
+                parts.append(f"l{fmt(dx)} {fmt(dy)}")
+            px, py = x, y
+        parts.append("z")
+        return "".join(parts)
 
     def polygon_to_d(poly):
-        d = ring_to_d(poly.exterior.coords)
-        for interior in poly.interiors:
-            d += " " + ring_to_d(interior.coords)
-        return d
+        return ring_to_d(poly.exterior.coords) + "".join(
+            ring_to_d(interior.coords) for interior in poly.interiors
+        )
 
     if geom.geom_type == "Polygon":
         return polygon_to_d(geom)
     elif geom.geom_type == "MultiPolygon":
-        return " ".join(polygon_to_d(p) for p in geom.geoms)
+        return "".join(polygon_to_d(p) for p in geom.geoms)
     return ""
 
 
@@ -109,8 +126,7 @@ def build_svg(text: str, hole_ratio: float | None, hole_shape: str = "square") -
     svg_root = ET.Element(f"{{{SVG_NS}}}svg", attrib={
         "width": str(w),
         "height": str(h),
-        "viewBox": f"0 0 {w} {h}",
-        "fill": "none",
+        "viewBox": f"0 0 {cols} {rows}",
     })
     ET.SubElement(svg_root, f"{{{SVG_NS}}}path", attrib={
         "d": path_d, "fill": "#363636", "fill-rule": "evenodd",
