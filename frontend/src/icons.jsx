@@ -178,6 +178,14 @@ export function IconBadgeAlert({ size = 22, ...props }) {
   );
 }
 
+export function IconExit({ size = ICON_SIZE, ...props }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path d="M28 16H9M18 25L9 16L18 7M5 5V27" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
 export function IconGithub({ size = ICON_SIZE, ...props }) {
   return (
     <svg width={size} height={size} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>

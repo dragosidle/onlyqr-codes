@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
 	IconBadgeAlert,
+	IconExit,
 	IconGithub,
 	IconPublicStats,
 	IconStar,
@@ -46,7 +47,7 @@ export default function Header() {
 		<header className='site-header'>
 			<div className='inner'>
 				<Link to={isAbout ? '/' : '/about'} className='about-btn'>
-					<IconBadgeAlert size={16} />
+					{isAbout ? <IconExit size={16} /> : <IconBadgeAlert size={16} />}
 					<span>{isAbout ? 'Exit' : 'About'}</span>
 				</Link>
 				<div
