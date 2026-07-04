@@ -162,6 +162,8 @@ export default function App() {
 	// text (or placeholder), and we set the input width from its measurement so
 	// the pill grows with what's typed and pushes the Generate button along.
 	const sizerRef = useRef(null)
+	const inputRef = useRef(null)
+	const wifiSsidRef = useRef(null)
 	const [inputWidth, setInputWidth] = useState(null)
 	useLayoutEffect(() => {
 		const el = sizerRef.current
@@ -194,6 +196,30 @@ export default function App() {
 		mq.addEventListener('change', handler)
 		return () => mq.removeEventListener('change', handler)
 	}, [])
+
+	// Type-to-focus: pressing any letter or digit anywhere on the page focuses
+	// the relevant input so the keystroke lands in it, even when it isn't
+	// selected. Focusing during keydown means the browser's default text
+	// insertion happens in the newly focused field — no manual value plumbing.
+	useEffect(() => {
+		const onKeyDown = (e) => {
+			if (e.metaKey || e.ctrlKey || e.altKey) return
+			if (e.key.length !== 1 || !/[a-zA-Z0-9]/.test(e.key)) return
+			const t = e.target
+			if (
+				t instanceof HTMLElement &&
+				(t.tagName === 'INPUT' ||
+					t.tagName === 'TEXTAREA' ||
+					t.tagName === 'SELECT' ||
+					t.isContentEditable)
+			)
+				return
+			const input = qrType === 'Wifi' ? wifiSsidRef.current : inputRef.current
+			input?.focus()
+		}
+		window.addEventListener('keydown', onKeyDown)
+		return () => window.removeEventListener('keydown', onKeyDown)
+	}, [qrType])
 
 	const [punchedThisSession, setPunchedThisSession] = useState(false)
 	const showPunchNotice = punchedThisSession && !punchNoticeDismissed
@@ -501,6 +527,7 @@ export default function App() {
 									<div className='wifi-inputs'>
 										<div className='input-with-action full-width'>
 											<input
+												ref={wifiSsidRef}
 												type='text'
 												placeholder='Network name (SSID)'
 												value={wifiSsid}
@@ -545,6 +572,7 @@ export default function App() {
 											{text || 'domain.com'}
 										</span>
 										<input
+											ref={inputRef}
 											type='text'
 											name='url'
 											value={text}
