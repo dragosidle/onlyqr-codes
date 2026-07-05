@@ -580,9 +580,18 @@ body {
 
 .wifi-inputs {
 	display: flex;
-	flex-direction: column;
+	flex-direction: row;
 	gap: 8px;
 	width: 100%;
+}
+
+.wifi-inputs .input-with-action {
+	flex: 1;
+	min-width: 0;
+}
+
+.wifi-inputs .input-with-action input::placeholder {
+	font-style: normal;
 }
 
 .input-with-action:focus-within,

@@ -137,9 +137,20 @@ def build_svg_cached(text: str, hole: str | None, shape: str) -> str:
     return build_svg(text, ratio, shape)
 
 
+# The WiFi QR convention (ZXing / WPA3 spec) requires backslash-escaping
+# these characters in SSID and password values, otherwise scanners misparse
+# the URI at the first stray semicolon.
+_WIFI_ESCAPE = str.maketrans({c: f"\\{c}" for c in '\\;,":'})
+
+
+def _escape_wifi_value(value: str) -> str:
+    return value.translate(_WIFI_ESCAPE)
+
+
+# 802.11 caps SSIDs at 32 bytes; WPA-personal passphrases at 63 characters.
 class WifiQrRequest(BaseModel):
-    ssid: str = Field(..., min_length=1, max_length=256)
-    password: str = Field(default="", max_length=256)
+    ssid: str = Field(..., min_length=1, max_length=32)
+    password: str = Field(default="", max_length=63)
     hole: str | None = Field(default=None, pattern="^(small|medium|large)$")
     shape: str = Field(default="square", pattern="^(square|circle)$")
 
@@ -166,7 +177,9 @@ async def generate_qr(
 @limiter.limit("30/minute")
 async def generate_wifi_qr(request: Request, body: WifiQrRequest):
     security = "WPA" if body.password else "nopass"
-    wifi_uri = f"WIFI:T:{security};S:{body.ssid};P:{body.password};;"
+    ssid = _escape_wifi_value(body.ssid)
+    password = _escape_wifi_value(body.password)
+    wifi_uri = f"WIFI:T:{security};S:{ssid};P:{password};;"
     svg = build_svg_cached(wifi_uri, body.hole, body.shape)
     await _increment_daily_counter()
     return Response(content=svg, media_type="image/svg+xml")

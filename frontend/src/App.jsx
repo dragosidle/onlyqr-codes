@@ -40,7 +40,10 @@ function loadDomains() {
 	try {
 		const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY))
 		if (!Array.isArray(parsed)) return []
-		return parsed.filter((d) => d && typeof d.url === 'string' && d.svgs?.none)
+		return parsed
+			.filter((d) => d && typeof d.url === 'string' && d.svgs?.none)
+			// Migrate entries saved before BTF-69: drop any persisted WiFi password.
+			.map((d) => (d.url.startsWith('WIFI:') ? { ...d, url: stripWifiPassword(d.url) } : d))
 	} catch {
 		return []
 	}
@@ -80,14 +83,20 @@ function stripDiacritics(text) {
 	return text.normalize('NFD').replace(/[̀-ͯ]/g, '')
 }
 
-function extractWifiSsid(wifiUri) {
-	const match = wifiUri.match(/;S:([^;]*)/)
-	return match ? match[1] : wifiUri
+// The WiFi QR convention backslash-escapes \ ; , " : inside values.
+function escapeWifiValue(value) {
+	return value.replace(/([\\;,":])/g, '\\$1')
 }
 
-function extractWifiPassword(wifiUri) {
-	const match = wifiUri.match(/;P:([^;]*)/)
-	return match ? match[1] : ''
+function extractWifiSsid(wifiUri) {
+	const match = wifiUri.match(/;S:((?:\\.|[^;\\])*)/)
+	return match ? match[1].replace(/\\(.)/g, '$1') : wifiUri
+}
+
+// WiFi passwords must never be persisted (BTF-65 / BTF-69) — this strips the
+// P: segment so stored URIs contain only the SSID and security type.
+function stripWifiPassword(wifiUri) {
+	return wifiUri.replace(/;P:(?:\\.|[^;\\])*/, '')
 }
 
 function midTruncate(str, max = 35) {
@@ -338,7 +347,10 @@ export default function App() {
 				return
 			}
 			const security = wifiPassword.trim() ? 'WPA' : 'nopass'
-			value = `WIFI:T:${security};S:${wifiSsid.trim()};P:${wifiPassword.trim()};;`
+			// The stored value deliberately omits the password (BTF-65 / BTF-69):
+			// it's only a history key/label, the QR itself is generated server-side
+			// from the credentials POSTed below.
+			value = `WIFI:T:${security};S:${escapeWifiValue(wifiSsid.trim())};;`
 		} else {
 			const raw = text.trim()
 			if (!raw) return
@@ -359,25 +371,38 @@ export default function App() {
 		setError('')
 		setLoading(true)
 		try {
-			let res
+			let svgs
 			if (qrType === 'Wifi') {
 				// POST credentials so they never appear in server logs or request URLs.
-				res = await fetch('/api/qr/wifi', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						ssid: wifiSsid.trim(),
-						password: wifiPassword.trim(),
-					}),
-				})
+				// The punch-hole variant is fetched now too: the password only lives in
+				// memory during this call, so the variant can't be regenerated later
+				// from the persisted history entry.
+				const postWifi = (extra) =>
+					fetch('/api/qr/wifi', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({
+							ssid: wifiSsid.trim(),
+							password: wifiPassword.trim(),
+							...extra,
+						}),
+					})
+				const [resNone, resPunched] = await Promise.all([
+					postWifi({}),
+					postWifi({ hole: 'large', shape: 'square' }),
+				])
+				if (!resNone.ok) throw new Error(`Server returned ${resNone.status}`)
+				if (!resPunched.ok) throw new Error(`Server returned ${resPunched.status}`)
+				const [none, punched] = await Promise.all([resNone.text(), resPunched.text()])
+				svgs = { none, punched }
 			} else {
 				const params = new URLSearchParams({ url: value })
-				res = await fetch(`/api/qr?${params.toString()}`)
+				const res = await fetch(`/api/qr?${params.toString()}`)
+				if (!res.ok) throw new Error(`Server returned ${res.status}`)
+				svgs = { none: await res.text() }
 			}
-			if (!res.ok) throw new Error(`Server returned ${res.status}`)
-			const none = await res.text()
 			setDomains((prev) =>
-				[...prev, { url: value, type: qrType, svgs: { none }, punched: false }].slice(-MAX_DOMAINS),
+				[...prev, { url: value, type: qrType, svgs, punched: false }].slice(-MAX_DOMAINS),
 			)
 			setActiveUrl(value)
 			setNewUrls((prev) => new Set([...prev, value]))
@@ -407,26 +432,18 @@ export default function App() {
 		setPunchingUrl(url)
 		setShakingPunchUrl(url)
 		try {
-			let res
 			if (url.startsWith('WIFI:')) {
-				res = await fetch('/api/qr/wifi', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						ssid: extractWifiSsid(url),
-						password: extractWifiPassword(url),
-						hole: 'large',
-						shape: 'square',
-					}),
-				})
-			} else {
-				const params = new URLSearchParams({
-					url,
-					hole: 'large',
-					shape: 'square',
-				})
-				res = await fetch(`/api/qr?${params.toString()}`)
+				// The password is never persisted, so the punched variant can't be
+				// rebuilt from history. It's prefetched at generate time; reaching
+				// here means this is a pre-migration entry.
+				throw new Error('This WiFi QR was saved without its password — delete it and generate it again to use punch.')
 			}
+			const params = new URLSearchParams({
+				url,
+				hole: 'large',
+				shape: 'square',
+			})
+			const res = await fetch(`/api/qr?${params.toString()}`)
 			if (!res.ok) throw new Error(`Server returned ${res.status}`)
 			const punched = await res.text()
 			setPunchedThisSession(true)
@@ -506,22 +523,20 @@ export default function App() {
 					<div className='app-layout'>
 						<div className='controls-col'>
 							<section className='controls'>
-								{/* type-tabs hidden for now
 								<div className='type-tabs'>
 									<div className='type-tab-indicator' style={indicatorStyle} />
 									{QR_TYPES.map(({ label, Icon }, i) => (
 										<button
 											key={label}
 											ref={(el) => (tabRefs.current[i] = el)}
-											className={`type-tab${qrType === label ? ' active' : ''}${['Wifi', 'vCard', 'WhatsApp'].includes(label) ? ' disabled' : ''}`}
-											disabled={['Wifi', 'vCard', 'WhatsApp'].includes(label)}
+											className={`type-tab${qrType === label ? ' active' : ''}${['vCard', 'WhatsApp'].includes(label) ? ' disabled' : ''}`}
+											disabled={['vCard', 'WhatsApp'].includes(label)}
 											onClick={() => setQrType(label)}>
 											<Icon size={16} />
 											{label}
 										</button>
 									))}
 								</div>
-								*/}
 
 								{qrType === 'Wifi' ? (
 									<div className='wifi-inputs'>
@@ -533,7 +548,7 @@ export default function App() {
 												value={wifiSsid}
 												onChange={(e) => setWifiSsid(e.target.value)}
 												onKeyDown={(e) => e.key === 'Enter' && generate()}
-												maxLength={200}
+												maxLength={32}
 											/>
 										</div>
 										<div className='input-with-action full-width'>
@@ -543,7 +558,7 @@ export default function App() {
 												value={wifiPassword}
 												onChange={(e) => setWifiPassword(e.target.value)}
 												onKeyDown={(e) => e.key === 'Enter' && generate()}
-												maxLength={200}
+												maxLength={63}
 											/>
 											<GenerateButton
 												onClick={generate}
