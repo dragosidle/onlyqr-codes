@@ -8,15 +8,15 @@ export default function About() {
 				<section className='manifesto'>
 					<div className='inner'>
 						<p>
-							Most QR code tools want you to create an account, host your files, track your scans, and
-							pick from seventeen color schemes. That's not a QR generator anymore, that's a platform
-							trying to lock you in.
+							Most QR code tools want you to create an account, host your files, track your scans,
+							and pick from seventeen color schemes. That's not a QR generator anymore, that's a
+							platform trying to lock you in. This tool does one thing: it takes a string and turns
+							it into a QR code.
 						</p>
-						<p>This tool does one thing: it takes a string and turns it into a QR code. That's it.</p>
 						<p>
 							No sign-up, no file hosting, no analytics, no PNG or JPG, no "premium export" Just a
-							clean SVG file. The only format a designer or developer actually needs. Scalable to any
-							size, ready to drop straight into Figma, Illustrator, or your codebase.
+							clean SVG file. The only format a designer or developer actually needs. Scalable to
+							any size, ready to drop straight into Figma, Illustrator, or your codebase.
 						</p>
 						<p>
 							The QR code itself is generated the way it was meant to look: sharp, square dots on a
@@ -37,10 +37,10 @@ export default function About() {
 							className='qr-example qr-example--others'
 						/>
 						<p className='qr-examples-caption'>
-							Most generators produce SVGs made of hundreds of individual squares. Onlyqr.codes merges
-							them all into a single unified shape before rendering. No stacked rectangles, no hidden
-							seams. Logo holes are real cutouts baked into the geometry, not white boxes covering
-							what's underneath. One clean path that scales perfectly.
+							Most generators produce SVGs made of hundreds of individual squares. Onlyqr.codes
+							merges them all into a single unified shape before rendering. No stacked rectangles,
+							no hidden seams. Logo holes are real cutouts baked into the geometry, not white boxes
+							covering what's underneath. One clean path that scales perfectly.
 						</p>
 						<img
 							src={onlyQrExampleImg}
