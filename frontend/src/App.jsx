@@ -40,10 +40,12 @@ function loadDomains() {
 	try {
 		const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY))
 		if (!Array.isArray(parsed)) return []
-		return parsed
-			.filter((d) => d && typeof d.url === 'string' && d.svgs?.none)
-			// Migrate entries saved before BTF-69: drop any persisted WiFi password.
-			.map((d) => (d.url.startsWith('WIFI:') ? { ...d, url: stripWifiPassword(d.url) } : d))
+		return (
+			parsed
+				.filter((d) => d && typeof d.url === 'string' && d.svgs?.none)
+				// Migrate entries saved before BTF-69: drop any persisted WiFi password.
+				.map((d) => (d.url.startsWith('WIFI:') ? { ...d, url: stripWifiPassword(d.url) } : d))
+		)
 	} catch {
 		return []
 	}
@@ -158,6 +160,7 @@ export default function App() {
 	const [qrType, setQrType] = useState('Link') // stores the label string
 	const tabRefs = useRef([])
 	const [indicatorStyle, setIndicatorStyle] = useState({})
+	const [hoveredTab, setHoveredTab] = useState(null)
 
 	useLayoutEffect(() => {
 		const el = tabRefs.current[QR_TYPES.findIndex((t) => t.label === qrType)]
@@ -436,7 +439,9 @@ export default function App() {
 				// The password is never persisted, so the punched variant can't be
 				// rebuilt from history. It's prefetched at generate time; reaching
 				// here means this is a pre-migration entry.
-				throw new Error('This WiFi QR was saved without its password — delete it and generate it again to use punch.')
+				throw new Error(
+					'This WiFi QR was saved without its password — delete it and generate it again to use punch.',
+				)
 			}
 			const params = new URLSearchParams({
 				url,
@@ -519,305 +524,321 @@ export default function App() {
 
 	return (
 		<>
-				<main className='hero'>
-					<div className='app-layout'>
-						<div className='controls-col'>
-							<section className='controls'>
-								<div className='type-tabs'>
-									<div className='type-tab-indicator' style={indicatorStyle} />
-									{QR_TYPES.map(({ label, Icon }, i) => (
+			<main className='hero'>
+				<div className='app-layout'>
+					<div className='controls-col'>
+						<section className='controls'>
+							<div className='type-tabs'>
+								<div className='type-tab-indicator' style={indicatorStyle} />
+								{QR_TYPES.map(({ label, Icon }, i) => {
+									const isDisabled = ['vCard', 'WhatsApp'].includes(label)
+									const tab = (
 										<button
 											key={label}
 											ref={(el) => (tabRefs.current[i] = el)}
-											className={`type-tab${qrType === label ? ' active' : ''}${['vCard', 'WhatsApp'].includes(label) ? ' disabled' : ''}`}
-											disabled={['vCard', 'WhatsApp'].includes(label)}
+											className={`type-tab${qrType === label ? ' active' : ''}${isDisabled ? ' disabled' : ''}`}
+											disabled={isDisabled}
 											onClick={() => setQrType(label)}>
 											<Icon size={16} />
 											{label}
 										</button>
-									))}
-								</div>
+									)
+									return isDisabled ? (
+										<div
+											key={label}
+											className='type-tab-tooltip-wrap'
+											onMouseEnter={() => setHoveredTab(label)}
+											onMouseLeave={() => setHoveredTab(null)}>
+											{tab}
+											<span
+												className={`type-tab-tooltip${hoveredTab === label ? ' visible' : ''}`}>
+												Coming soon
+											</span>
+										</div>
+									) : (
+										tab
+									)
+								})}
+							</div>
 
-								{qrType === 'Wifi' ? (
-									<div className='input-with-action full-width wifi-inputs'>
-										<input
-											ref={wifiSsidRef}
-											type='text'
-											placeholder='Network name (SSID)'
-											value={wifiSsid}
-											onChange={(e) => setWifiSsid(e.target.value)}
-											onKeyDown={(e) => e.key === 'Enter' && generate()}
-											maxLength={32}
-										/>
-										<input
-											type='text'
-											placeholder='Password (optional)'
-											value={wifiPassword}
-											onChange={(e) => setWifiPassword(e.target.value)}
-											onKeyDown={(e) => e.key === 'Enter' && generate()}
-											maxLength={63}
-										/>
-										<GenerateButton
-											onClick={generate}
-											disabled={loading || wifiSsid.length === 0}
-											hasText={wifiSsid.length > 0}
-											shaking={shaking}
-											onShakeEnd={() => setShaking(false)}
-										/>
-										{wifiSsid.length > 0 && (
-											<ClearButton
-												key='clear-wifi'
-												onClick={() => {
-													setWifiSsid('')
-													setWifiPassword('')
-												}}
-											/>
-										)}
-									</div>
-								) : (
-									<motion.div
-										layout='size'
-										className={`input-with-action${qrType === 'Text' ? ' full-width' : ''}`}
-										transition={{ layout: { duration: 0.35, ease: [0.16, 1, 0.3, 1] } }}>
-										<span ref={sizerRef} className='input-sizer' aria-hidden='true'>
-											{text || 'domain.com'}
-										</span>
-										<input
-											ref={inputRef}
-											type='text'
-											name='url'
-											value={text}
-											placeholder={
-												qrType === 'Text'
-													? 'You forget a thousand things everyday, pal.'
-													: 'domain.com'
-											}
-											style={
-												qrType !== 'Text' && inputWidth ? { width: `${inputWidth}px` } : undefined
-											}
-											onChange={(e) => {
-												let v = stripDiacritics(e.target.value)
-												if (qrType === 'Link') v = v.replace(/ /g, '-')
-												setText(v)
+							{qrType === 'Wifi' ? (
+								<div className='input-with-action full-width wifi-inputs'>
+									<input
+										ref={wifiSsidRef}
+										type='text'
+										placeholder='Network name (SSID)'
+										value={wifiSsid}
+										onChange={(e) => setWifiSsid(e.target.value)}
+										onKeyDown={(e) => e.key === 'Enter' && generate()}
+										maxLength={32}
+									/>
+									<input
+										type='text'
+										placeholder='Password'
+										value={wifiPassword}
+										onChange={(e) => setWifiPassword(e.target.value)}
+										onKeyDown={(e) => e.key === 'Enter' && generate()}
+										maxLength={63}
+									/>
+									<GenerateButton
+										onClick={generate}
+										disabled={loading || wifiSsid.length === 0}
+										hasText={wifiSsid.length > 0}
+										shaking={shaking}
+										onShakeEnd={() => setShaking(false)}
+									/>
+									{wifiSsid.length > 0 && (
+										<ClearButton
+											key='clear-wifi'
+											onClick={() => {
+												setWifiSsid('')
+												setWifiPassword('')
 											}}
-											onKeyDown={(e) => e.key === 'Enter' && generate()}
-											maxLength={500}
 										/>
-										<GenerateButton
-											onClick={generate}
-											disabled={loading || text.length === 0}
-											hasText={text.length > 0}
-											shaking={shaking}
-											onShakeEnd={() => setShaking(false)}
-										/>
-										{text.length > 0 && (
-											<ClearButton key='clear-text' onClick={() => setText('')} />
-										)}
-									</motion.div>
-								)}
+									)}
+								</div>
+							) : (
+								<motion.div
+									layout='size'
+									className={`input-with-action${qrType === 'Text' ? ' full-width' : ''}`}
+									transition={{ layout: { duration: 0.35, ease: [0.16, 1, 0.3, 1] } }}>
+									<span ref={sizerRef} className='input-sizer' aria-hidden='true'>
+										{text || 'domain.com'}
+									</span>
+									<input
+										ref={inputRef}
+										type='text'
+										name='url'
+										value={text}
+										placeholder={
+											qrType === 'Text'
+												? 'You forget a thousand things everyday, pal.'
+												: 'domain.com'
+										}
+										style={
+											qrType !== 'Text' && inputWidth ? { width: `${inputWidth}px` } : undefined
+										}
+										onChange={(e) => {
+											let v = stripDiacritics(e.target.value)
+											if (qrType === 'Link') v = v.replace(/ /g, '-')
+											setText(v)
+										}}
+										onKeyDown={(e) => e.key === 'Enter' && generate()}
+										maxLength={500}
+									/>
+									<GenerateButton
+										onClick={generate}
+										disabled={loading || text.length === 0}
+										hasText={text.length > 0}
+										shaking={shaking}
+										onShakeEnd={() => setShaking(false)}
+									/>
+									{text.length > 0 && <ClearButton key='clear-text' onClick={() => setText('')} />}
+								</motion.div>
+							)}
 
-								{error && <p className='error'>{error}</p>}
-							</section>
-						</div>
+							{error && <p className='error'>{error}</p>}
+						</section>
+					</div>
 
-						<div className='qr-row'>
-							{/* AnimatePresence is always mounted so initial={false} only
+					<div className='qr-row'>
+						{/* AnimatePresence is always mounted so initial={false} only
 							    suppresses the track's enter on page load (present at mount),
 							    but lets it swipe up when first added (new child). */}
-							<AnimatePresence initial={false}>
-								{!isEmpty && (
-									// Carousel track: all domain cards in a row, translated so the
-									// active (newest by default) card is centered. Generating a new
-									// domain appends a card at the right and slides the track left,
-									// so the previous one moves aside to make room.
-									<motion.div
-										key='track'
-										className='qr-track'
-										ref={trackRef}
-										style={{ x: trackX }}
-										initial={{ opacity: 0 }}
-										animate={{ opacity: 1 }}
-										transition={{ opacity: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}
-										data-single={domains.length === 1 || undefined}
-										drag={domains.length > 1 ? 'x' : false}
-										dragConstraints={{ left: -99999, right: 99999 }}
-										dragElastic={0}
-										dragMomentum={false}
-										onDragStart={() => {
-											isDraggingRef.current = true
-										}}
-										onDragEnd={(_, info) => {
-											const track = trackRef.current
-											if (!track) return
-											const projectedX = trackX.get() + info.velocity.x * 0.1
-											let nearestUrl = null
-											let minDist = Infinity
-											for (const [url, card] of Object.entries(cardRefs.current)) {
-												const targetX =
-													track.offsetWidth / 2 - (card.offsetLeft + card.offsetWidth / 2)
-												if (Math.abs(projectedX - targetX) < minDist) {
-													minDist = Math.abs(projectedX - targetX)
-													nearestUrl = url
-												}
+						<AnimatePresence initial={false}>
+							{!isEmpty && (
+								// Carousel track: all domain cards in a row, translated so the
+								// active (newest by default) card is centered. Generating a new
+								// domain appends a card at the right and slides the track left,
+								// so the previous one moves aside to make room.
+								<motion.div
+									key='track'
+									className='qr-track'
+									ref={trackRef}
+									style={{ x: trackX }}
+									initial={{ opacity: 0 }}
+									animate={{ opacity: 1 }}
+									transition={{ opacity: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}
+									data-single={domains.length === 1 || undefined}
+									drag={domains.length > 1 ? 'x' : false}
+									dragConstraints={{ left: -99999, right: 99999 }}
+									dragElastic={0}
+									dragMomentum={false}
+									onDragStart={() => {
+										isDraggingRef.current = true
+									}}
+									onDragEnd={(_, info) => {
+										const track = trackRef.current
+										if (!track) return
+										const projectedX = trackX.get() + info.velocity.x * 0.1
+										let nearestUrl = null
+										let minDist = Infinity
+										for (const [url, card] of Object.entries(cardRefs.current)) {
+											const targetX =
+												track.offsetWidth / 2 - (card.offsetLeft + card.offsetWidth / 2)
+											if (Math.abs(projectedX - targetX) < minDist) {
+												minDist = Math.abs(projectedX - targetX)
+												nearestUrl = url
 											}
-											requestAnimationFrame(() => {
-												isDraggingRef.current = false
-											})
-											if (!nearestUrl) return
-											if (nearestUrl !== activeUrl) {
-												setActiveUrl(nearestUrl)
-											} else {
-												const card = cardRefs.current[nearestUrl]
-												animateMotion(
-													trackX,
-													track.offsetWidth / 2 - (card.offsetLeft + card.offsetWidth / 2),
-													{ duration: 0.35, ease: [0.16, 1, 0.3, 1] },
-												)
-											}
+										}
+										requestAnimationFrame(() => {
+											isDraggingRef.current = false
+										})
+										if (!nearestUrl) return
+										if (nearestUrl !== activeUrl) {
+											setActiveUrl(nearestUrl)
+										} else {
+											const card = cardRefs.current[nearestUrl]
+											animateMotion(
+												trackX,
+												track.offsetWidth / 2 - (card.offsetLeft + card.offsetWidth / 2),
+												{ duration: 0.35, ease: [0.16, 1, 0.3, 1] },
+											)
+										}
+									}}>
+									<AnimatePresence
+										onExitComplete={() => {
+											requestAnimationFrame(() => centerFnRef.current())
+											if (domains.length === 0) setIsEmpty(true)
 										}}>
-										<AnimatePresence
-											onExitComplete={() => {
-												requestAnimationFrame(() => centerFnRef.current())
-												if (domains.length === 0) setIsEmpty(true)
-											}}>
-											{domains.map((d) => {
-												const punched = !!(d.punched && d.svgs.punched)
-												const svg = punched ? d.svgs.punched : d.svgs.none
-												const isActive = activeDomain?.url === d.url
-												return (
-													<motion.div
-														key={d.url}
-														ref={(el) => {
-															if (el) cardRefs.current[d.url] = el
-															else delete cardRefs.current[d.url]
-														}}
-														className={`qr-card${isActive ? ' active' : ''}`}
-														initial={{ opacity: 0, scale: 0.8 }}
-														animate={{ opacity: 1, scale: isActive ? 1 : 0.9 }}
-														exit={{ opacity: 0, scale: 0.9 }}
-														transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-														onClick={() =>
-															!isDraggingRef.current && !isActive && setActiveUrl(d.url)
-														}>
-														<div className='chip-row'>
-															<button
-																type='button'
-																className={`domain-chip${shakingUrl === d.url ? ' shake' : ''}${newUrls.has(d.url) ? ' chip-entering' : ''}`}
-																onClick={() => setActiveUrl(d.url)}
-																onAnimationEnd={(e) => {
-																	if (e.animationName === 'shake') setShakingUrl('')
-																	if (e.animationName === 'chip-enter')
-																		setNewUrls((prev) => {
-																			const next = new Set(prev)
-																			next.delete(d.url)
-																			return next
-																		})
-																}}>
-																{(() => {
-																	const TypeIcon = QR_TYPES.find(
-																		(t) => t.label === (d.type ?? 'Link'),
-																	)?.Icon
-																	return TypeIcon ? (
-																		<TypeIcon size={14} style={{ flexShrink: 0 }} />
-																	) : null
-																})()}
-																{d.type === 'Link' || !d.type
-																	? displayUrl(d.url)
-																	: d.type === 'Wifi'
-																		? midTruncate(extractWifiSsid(d.url))
-																		: midTruncate(d.url)}
-															</button>
-															<button
-																type='button'
-																className='chip-delete'
-																onClick={(e) => {
-																	e.stopPropagation()
-																	deleteDomain(d.url)
-																}}
-																title='Delete'
-																aria-label='Delete QR code'
-																data-visitors-event='chip-delete'>
-																<IconDelete size={18} />
-															</button>
-														</div>
-
-														<div
-															className={`preview${shakingPunchUrl === d.url ? ' shake' : ''}`}
-															onAnimationEnd={(e) => {
-																if (e.animationName === 'shake') setShakingPunchUrl('')
-															}}>
-															<div dangerouslySetInnerHTML={{ __html: svg }} />
-
-															<div className='qr-actions'>
-																<ConfirmButton
-																	className='punch-btn'
-																	onClick={() => copySvg(svg, buildFilename(d, punched))}
-																	title='Copy SVG'
-																	aria-label='Copy SVG'
-																	data-visitors-event='copy-svg-btn'>
-																	<IconCopy size={18} />
-																	Copy SVG
-																</ConfirmButton>
-
-																<ConfirmButton
-																	className='qr-download'
-																	onClick={() => downloadSvg(svg, buildFilename(d, punched))}
-																	title='Download SVG'
-																	aria-label='Download SVG'
-																	data-visitors-event='qr-download'>
-																	<IconDownload size={18} />
-																	Download
-																</ConfirmButton>
-															</div>
-														</div>
-
+										{domains.map((d) => {
+											const punched = !!(d.punched && d.svgs.punched)
+											const svg = punched ? d.svgs.punched : d.svgs.none
+											const isActive = activeDomain?.url === d.url
+											return (
+												<motion.div
+													key={d.url}
+													ref={(el) => {
+														if (el) cardRefs.current[d.url] = el
+														else delete cardRefs.current[d.url]
+													}}
+													className={`qr-card${isActive ? ' active' : ''}`}
+													initial={{ opacity: 0, scale: 0.8 }}
+													animate={{ opacity: 1, scale: isActive ? 1 : 0.9 }}
+													exit={{ opacity: 0, scale: 0.9 }}
+													transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+													onClick={() =>
+														!isDraggingRef.current && !isActive && setActiveUrl(d.url)
+													}>
+													<div className='chip-row'>
 														<button
-															className={`secondary copy-svg-btn${punched ? ' no-icon' : ''}${swingingPunchUrl === d.url ? ' punching' : ''}`}
-															onClick={() => {
-																if (!punched) setSwingingPunchUrl(d.url)
-																togglePunch(d.url)
-															}}
-															onAnimationEnd={() => setSwingingPunchUrl('')}
-															disabled={punchingUrl === d.url}
-															aria-pressed={punched}
-															data-visitors-event='punch-btn'>
-															{!punched && <IconPunch />}
-															{punched ? 'Remove punch hole' : 'Punch a hole'}
+															type='button'
+															className={`domain-chip${shakingUrl === d.url ? ' shake' : ''}${newUrls.has(d.url) ? ' chip-entering' : ''}`}
+															onClick={() => setActiveUrl(d.url)}
+															onAnimationEnd={(e) => {
+																if (e.animationName === 'shake') setShakingUrl('')
+																if (e.animationName === 'chip-enter')
+																	setNewUrls((prev) => {
+																		const next = new Set(prev)
+																		next.delete(d.url)
+																		return next
+																	})
+															}}>
+															{(() => {
+																const TypeIcon = QR_TYPES.find(
+																	(t) => t.label === (d.type ?? 'Link'),
+																)?.Icon
+																return TypeIcon ? (
+																	<TypeIcon size={14} style={{ flexShrink: 0 }} />
+																) : null
+															})()}
+															{d.type === 'Link' || !d.type
+																? displayUrl(d.url)
+																: d.type === 'Wifi'
+																	? midTruncate(extractWifiSsid(d.url))
+																	: midTruncate(d.url)}
 														</button>
-													</motion.div>
-												)
-											})}
-										</AnimatePresence>
-									</motion.div>
-								)}
-							</AnimatePresence>
-							<AnimatePresence initial={false}>
-								{isEmpty && (
-									<motion.div
-										key='placeholder'
-										className='qr-col'
-										initial={{ scale: 0.8, opacity: 0 }}
-										animate={{ scale: 1, opacity: 1 }}
-										transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}>
-										<div className='preview'>
-											<IllustrationQRPlaceholder style={{ opacity: 0.25 }} />
-										</div>
-									</motion.div>
-								)}
-							</AnimatePresence>
-						</div>
+														<button
+															type='button'
+															className='chip-delete'
+															onClick={(e) => {
+																e.stopPropagation()
+																deleteDomain(d.url)
+															}}
+															title='Delete'
+															aria-label='Delete QR code'
+															data-visitors-event='chip-delete'>
+															<IconDelete size={18} />
+														</button>
+													</div>
+
+													<div
+														className={`preview${shakingPunchUrl === d.url ? ' shake' : ''}`}
+														onAnimationEnd={(e) => {
+															if (e.animationName === 'shake') setShakingPunchUrl('')
+														}}>
+														<div dangerouslySetInnerHTML={{ __html: svg }} />
+
+														<div className='qr-actions'>
+															<ConfirmButton
+																className='punch-btn'
+																onClick={() => copySvg(svg, buildFilename(d, punched))}
+																title='Copy SVG'
+																aria-label='Copy SVG'
+																data-visitors-event='copy-svg-btn'>
+																<IconCopy size={18} />
+																Copy SVG
+															</ConfirmButton>
+
+															<ConfirmButton
+																className='qr-download'
+																onClick={() => downloadSvg(svg, buildFilename(d, punched))}
+																title='Download SVG'
+																aria-label='Download SVG'
+																data-visitors-event='qr-download'>
+																<IconDownload size={18} />
+																Download
+															</ConfirmButton>
+														</div>
+													</div>
+
+													<button
+														className={`secondary copy-svg-btn${punched ? ' no-icon' : ''}${swingingPunchUrl === d.url ? ' punching' : ''}`}
+														onClick={() => {
+															if (!punched) setSwingingPunchUrl(d.url)
+															togglePunch(d.url)
+														}}
+														onAnimationEnd={() => setSwingingPunchUrl('')}
+														disabled={punchingUrl === d.url}
+														aria-pressed={punched}
+														data-visitors-event='punch-btn'>
+														{!punched && <IconPunch />}
+														{punched ? 'Remove punch hole' : 'Punch a hole'}
+													</button>
+												</motion.div>
+											)
+										})}
+									</AnimatePresence>
+								</motion.div>
+							)}
+						</AnimatePresence>
+						<AnimatePresence initial={false}>
+							{isEmpty && (
+								<motion.div
+									key='placeholder'
+									className='qr-col'
+									initial={{ scale: 0.8, opacity: 0 }}
+									animate={{ scale: 1, opacity: 1 }}
+									transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}>
+									<div className='preview'>
+										<IllustrationQRPlaceholder style={{ opacity: 0.25 }} />
+									</div>
+								</motion.div>
+							)}
+						</AnimatePresence>
 					</div>
-				</main>
-				{todayCount !== null && (
-					<motion.p
-						className='today-counter'
-						initial={{ opacity: 0, y: 16, scale: 0.96 }}
-						animate={{ opacity: 1, y: 0, scale: 1 }}
-						transition={{ duration: 0.25, ease: 'easeOut' }}>
-						<span key={dotKey} className='today-dot' />
-						<NumberFlow className='today-count' value={todayCount ?? 0} /> codes generated today
-					</motion.p>
-				)}
+				</div>
+			</main>
+			{todayCount !== null && (
+				<motion.p
+					className='today-counter'
+					initial={{ opacity: 0, y: 16, scale: 0.96 }}
+					animate={{ opacity: 1, y: 0, scale: 1 }}
+					transition={{ duration: 0.25, ease: 'easeOut' }}>
+					<span key={dotKey} className='today-dot' />
+					<NumberFlow className='today-count' value={todayCount ?? 0} /> codes generated today
+				</motion.p>
+			)}
 
 			{/* Always mounted (not AnimatePresence'd) so the image starts downloading on page
 			    load rather than when the notice first becomes relevant, avoiding a pop-in
@@ -837,9 +858,9 @@ export default function App() {
 				</button>
 				<h3 className='punch-notice-title'>Punching is safe.</h3>
 				<p className='punch-notice-body'>
-					The QR is regenerated from scratch. Center modules are never drawn, not erased. QR
-					codes at high error correction (level&nbsp;H) tolerate up to 30% module loss. The hole
-					sits well within that threshold, so your code scans just as reliably.
+					The QR is regenerated from scratch. Center modules are never drawn, not erased. QR codes
+					at high error correction (level&nbsp;H) tolerate up to 30% module loss. The hole sits well
+					within that threshold, so your code scans just as reliably.
 				</p>
 				<img src={aliDittherImg} alt='' className='punch-notice-image' />
 			</motion.div>

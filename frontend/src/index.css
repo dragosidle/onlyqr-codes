@@ -158,7 +158,37 @@ body {
 .type-tab.disabled {
 	opacity: 0.8;
 	cursor: not-allowed;
+	/* pointer-events: none; */
+}
+
+.type-tab-tooltip-wrap {
+	position: relative;
+	display: flex;
+}
+
+.type-tab-tooltip {
+	position: absolute;
+	top: calc(100% + 8px);
+	left: 50%;
+	transform: translateX(-50%) translateY(-4px);
+	white-space: nowrap;
+	padding: 6px 10px;
+	border-radius: 6px;
+	background: #0f1115;
+	color: #fff;
+	font-size: 12px;
+	font-weight: 400;
+	opacity: 0;
 	pointer-events: none;
+	transition:
+		opacity 150ms ease,
+		transform 150ms ease;
+	z-index: 5;
+}
+
+.type-tab-tooltip.visible {
+	opacity: 1;
+	transform: translateX(-50%) translateY(0);
 }
 
 .app-layout {
@@ -401,6 +431,7 @@ body {
 	flex-direction: column;
 	justify-content: center;
 	gap: 16px;
+	padding: 0 16px;
 }
 
 @keyframes clear-btn-enter {
