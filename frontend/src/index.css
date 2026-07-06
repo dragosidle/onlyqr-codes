@@ -578,20 +578,17 @@ body {
 	margin: 0;
 }
 
-.wifi-inputs {
-	display: flex;
-	flex-direction: row;
-	gap: 8px;
-	width: 100%;
+.wifi-inputs input {
+	min-width: 0 !important;
 }
 
-.wifi-inputs .input-with-action {
-	flex: 1;
-	min-width: 0;
+.wifi-inputs input:focus,
+.wifi-inputs input:focus-visible {
+	outline: none;
 }
 
-.wifi-inputs .input-with-action input::placeholder {
-	font-style: normal;
+.wifi-inputs input:not(:first-of-type) {
+	padding-left: 12px;
 }
 
 .input-with-action:focus-within,
@@ -610,7 +607,7 @@ body {
 	flex: 1 1 auto;
 	max-width: 100%;
 	min-width: 150px !important;
-	padding: 16px 12px 16px 32px;
+	padding: 15px 12px 15px 32px;
 	border: none;
 	background: transparent;
 	border-radius: 100px;
@@ -657,6 +654,10 @@ body {
 
 .input-with-action.full-width input::placeholder {
 	font-style: italic;
+}
+
+.input-with-action.wifi-inputs input::placeholder {
+	font-style: normal;
 }
 
 .input-with-action input:-webkit-autofill,

@@ -539,44 +539,40 @@ export default function App() {
 								</div>
 
 								{qrType === 'Wifi' ? (
-									<div className='wifi-inputs'>
-										<div className='input-with-action full-width'>
-											<input
-												ref={wifiSsidRef}
-												type='text'
-												placeholder='Network name (SSID)'
-												value={wifiSsid}
-												onChange={(e) => setWifiSsid(e.target.value)}
-												onKeyDown={(e) => e.key === 'Enter' && generate()}
-												maxLength={32}
+									<div className='input-with-action full-width wifi-inputs'>
+										<input
+											ref={wifiSsidRef}
+											type='text'
+											placeholder='Network name (SSID)'
+											value={wifiSsid}
+											onChange={(e) => setWifiSsid(e.target.value)}
+											onKeyDown={(e) => e.key === 'Enter' && generate()}
+											maxLength={32}
+										/>
+										<input
+											type='text'
+											placeholder='Password (optional)'
+											value={wifiPassword}
+											onChange={(e) => setWifiPassword(e.target.value)}
+											onKeyDown={(e) => e.key === 'Enter' && generate()}
+											maxLength={63}
+										/>
+										<GenerateButton
+											onClick={generate}
+											disabled={loading || wifiSsid.length === 0}
+											hasText={wifiSsid.length > 0}
+											shaking={shaking}
+											onShakeEnd={() => setShaking(false)}
+										/>
+										{wifiSsid.length > 0 && (
+											<ClearButton
+												key='clear-wifi'
+												onClick={() => {
+													setWifiSsid('')
+													setWifiPassword('')
+												}}
 											/>
-										</div>
-										<div className='input-with-action full-width'>
-											<input
-												type='password'
-												placeholder='Password (optional)'
-												value={wifiPassword}
-												onChange={(e) => setWifiPassword(e.target.value)}
-												onKeyDown={(e) => e.key === 'Enter' && generate()}
-												maxLength={63}
-											/>
-											<GenerateButton
-												onClick={generate}
-												disabled={loading || wifiSsid.length === 0}
-												hasText={wifiSsid.length > 0}
-												shaking={shaking}
-												onShakeEnd={() => setShaking(false)}
-											/>
-											{wifiSsid.length > 0 && (
-												<ClearButton
-													key='clear-wifi'
-													onClick={() => {
-														setWifiSsid('')
-														setWifiPassword('')
-													}}
-												/>
-											)}
-										</div>
+										)}
 									</div>
 								) : (
 									<motion.div
