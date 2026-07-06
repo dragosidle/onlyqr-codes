@@ -51,5 +51,16 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view "${{ steps.ver.outputs.tag }}" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
-            gh release create "${{ steps.ver.outputs.tag }}" --repo "$GITHUB_REPOSITORY" --generate-notes
+          tag="${{ steps.ver.outputs.tag }}"
+          gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 && exit 0
+
+          # Changelog is the commit subjects since the previous tag (this repo
+          # pushes straight to master, so --generate-notes has no PRs to draw from).
+          prev=$(git describe --tags --abbrev=0 --match 'v[0-9]*' "$tag^" 2>/dev/null || true)
+          if [ -n "$prev" ]; then
+            git log "$prev..$tag" --no-merges --pretty=format:'- %s' > notes.md
+          else
+            git log -1 --pretty=format:'- %s' "$tag" > notes.md
+          fi
+
+          gh release create "$tag" --repo "$GITHUB_REPOSITORY" --title "$tag" --notes-file notes.md
