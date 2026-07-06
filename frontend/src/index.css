@@ -582,6 +582,10 @@ body {
 	.header-right {
 		display: none;
 	}
+
+	.type-tabs {
+		display: none;
+	}
 }
 
 .input-with-action {

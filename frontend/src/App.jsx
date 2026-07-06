@@ -167,6 +167,18 @@ export default function App() {
 		if (el) setIndicatorStyle({ left: el.offsetLeft, width: el.offsetWidth })
 	}, [qrType])
 
+	// The type tabs are hidden below 800px (only URL QR codes fit that layout),
+	// so force back to 'Link' if the viewport shrinks while another type is active.
+	useEffect(() => {
+		const mq = window.matchMedia('(max-width: 800px)')
+		const handler = (e) => {
+			if (e.matches) setQrType('Link')
+		}
+		mq.addEventListener('change', handler)
+		if (mq.matches) setQrType('Link')
+		return () => mq.removeEventListener('change', handler)
+	}, [])
+
 	const [text, setText] = useState('')
 	const [wifiSsid, setWifiSsid] = useState('')
 	const [wifiPassword, setWifiPassword] = useState('')
