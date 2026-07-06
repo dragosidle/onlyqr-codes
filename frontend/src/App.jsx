@@ -47,6 +47,8 @@ function loadDomains() {
 				.filter((d) => d && typeof d.url === 'string' && d.svgs?.none)
 				// Migrate entries saved before BTF-69: drop any persisted WiFi password.
 				.map((d) => (d.url.startsWith('WIFI:') ? { ...d, url: stripWifiPassword(d.url) } : d))
+				// Migrate entries saved before the 'Wifi' -> 'Wi-Fi' label rename.
+				.map((d) => (d.type === 'Wifi' ? { ...d, type: 'Wi-Fi' } : d))
 		)
 	} catch {
 		return []
@@ -124,7 +126,7 @@ const QR_TYPES = [
 	// { label: 'Email', Icon: IconEmail },
 	// { label: 'Call', Icon: IconCall },
 	// { label: 'SMS', Icon: IconSMS },
-	{ label: 'Wifi', Icon: IconWifi },
+	{ label: 'Wi-Fi', Icon: IconWifi },
 	{ label: 'vCard', Icon: IconVCard },
 	{ label: 'WhatsApp', Icon: IconWhatsApp },
 ]
@@ -241,7 +243,7 @@ export default function App() {
 					t.isContentEditable)
 			)
 				return
-			const input = qrType === 'Wifi' ? wifiSsidRef.current : inputRef.current
+			const input = qrType === 'Wi-Fi' ? wifiSsidRef.current : inputRef.current
 			input?.focus()
 		}
 		window.addEventListener('keydown', onKeyDown)
@@ -359,7 +361,7 @@ export default function App() {
 	const generate = async () => {
 		window.visitors?.track('generate-btn')
 		let value
-		if (qrType === 'Wifi') {
+		if (qrType === 'Wi-Fi') {
 			if (!wifiSsid.trim()) {
 				setShaking(true)
 				return
@@ -390,7 +392,7 @@ export default function App() {
 		setLoading(true)
 		try {
 			let svgs
-			if (qrType === 'Wifi') {
+			if (qrType === 'Wi-Fi') {
 				// POST credentials so they never appear in server logs or request URLs.
 				// The punch-hole variant is fetched now too: the password only lives in
 				// memory during this call, so the variant can't be regenerated later
@@ -455,7 +457,7 @@ export default function App() {
 				// rebuilt from history. It's prefetched at generate time; reaching
 				// here means this is a pre-migration entry.
 				throw new Error(
-					'This WiFi QR was saved without its password — delete it and generate it again to use punch.',
+					'This Wi-Fi QR was saved without its password — delete it and generate it again to use punch.',
 				)
 			}
 			const params = new URLSearchParams({
@@ -508,7 +510,7 @@ export default function App() {
 			} catch {
 				base = 'qr'
 			}
-		} else if (d.type === 'Wifi') {
+		} else if (d.type === 'Wi-Fi') {
 			const ssid = extractWifiSsid(d.url)
 			base =
 				ssid
@@ -575,12 +577,12 @@ export default function App() {
 								})}
 							</div>
 
-							{qrType === 'Wifi' ? (
+							{qrType === 'Wi-Fi' ? (
 								<div className='input-with-action full-width wifi-inputs'>
 									<input
 										ref={wifiSsidRef}
 										type='text'
-										placeholder='Wifi name (SSID)'
+										placeholder='Wi-Fi name (SSID)'
 										value={wifiSsid}
 										onChange={(e) => setWifiSsid(e.target.value)}
 										onKeyDown={(e) => e.key === 'Enter' && generate()}
@@ -771,7 +773,7 @@ export default function App() {
 															})()}
 															{d.type === 'Link' || !d.type
 																? displayUrl(d.url)
-																: d.type === 'Wifi'
+																: d.type === 'Wi-Fi'
 																	? midTruncate(extractWifiSsid(d.url))
 																	: midTruncate(d.url)}
 														</button>
