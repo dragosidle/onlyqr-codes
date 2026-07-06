@@ -639,6 +639,49 @@ body {
 	padding-left: 12px;
 }
 
+.wifi-password-field {
+	position: relative;
+	display: flex;
+	align-items: center;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.wifi-password-field input {
+	padding-left: 12px;
+	padding-right: 34px;
+}
+
+.eye-toggle {
+	position: absolute;
+	right: 4px;
+	top: 50%;
+	transform: translateY(-50%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	border: none;
+	background: none;
+	padding: 0;
+	cursor: pointer;
+	color: #111111;
+	opacity: 0.45;
+	transition: opacity 100ms ease;
+	-webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) {
+	.eye-toggle:hover {
+		opacity: 0.8;
+	}
+}
+
+.eye-toggle:active:not(:disabled) {
+	transform: translateY(-25%) scale(0.98);
+}
+
 .input-with-action:focus-within,
 .input-with-action:has(input:not(:placeholder-shown)) {
 	background: #fff;

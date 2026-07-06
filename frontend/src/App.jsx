@@ -16,6 +16,8 @@ import {
 	IconTick,
 	IconPunch,
 	IconDelete,
+	IconEyeOpen,
+	IconEyeClosed,
 } from './icons'
 import GenerateButton from './GenerateButton'
 import ClearButton from './ClearButton'
@@ -182,6 +184,7 @@ export default function App() {
 	const [text, setText] = useState('')
 	const [wifiSsid, setWifiSsid] = useState('')
 	const [wifiPassword, setWifiPassword] = useState('')
+	const [wifiPasswordVisible, setWifiPasswordVisible] = useState(true)
 	// Auto-size the URL input to its content: a hidden sizer span mirrors the
 	// text (or placeholder), and we set the input width from its measurement so
 	// the pill grows with what's typed and pushes the Generate button along.
@@ -562,8 +565,7 @@ export default function App() {
 											onMouseEnter={() => setHoveredTab(label)}
 											onMouseLeave={() => setHoveredTab(null)}>
 											{tab}
-											<span
-												className={`type-tab-tooltip${hoveredTab === label ? ' visible' : ''}`}>
+											<span className={`type-tab-tooltip${hoveredTab === label ? ' visible' : ''}`}>
 												Coming soon
 											</span>
 										</div>
@@ -578,20 +580,33 @@ export default function App() {
 									<input
 										ref={wifiSsidRef}
 										type='text'
-										placeholder='Network name (SSID)'
+										placeholder='Wifi name (SSID)'
 										value={wifiSsid}
 										onChange={(e) => setWifiSsid(e.target.value)}
 										onKeyDown={(e) => e.key === 'Enter' && generate()}
 										maxLength={32}
 									/>
-									<input
-										type='text'
-										placeholder='Password'
-										value={wifiPassword}
-										onChange={(e) => setWifiPassword(e.target.value)}
-										onKeyDown={(e) => e.key === 'Enter' && generate()}
-										maxLength={63}
-									/>
+									<div className='wifi-password-field'>
+										<input
+											type={wifiPasswordVisible ? 'text' : 'password'}
+											placeholder='Password'
+											value={wifiPassword}
+											onChange={(e) => setWifiPassword(e.target.value)}
+											onKeyDown={(e) => e.key === 'Enter' && generate()}
+											maxLength={63}
+										/>
+										<button
+											type='button'
+											className='eye-toggle'
+											aria-label={wifiPasswordVisible ? 'Hide password' : 'Show password'}
+											onClick={() => setWifiPasswordVisible((v) => !v)}>
+											{wifiPasswordVisible ? (
+												<IconEyeOpen size={18} />
+											) : (
+												<IconEyeClosed size={18} />
+											)}
+										</button>
+									</div>
 									<GenerateButton
 										onClick={generate}
 										disabled={loading || wifiSsid.length === 0}
