@@ -507,6 +507,19 @@ body {
 	}
 }
 
+.about-btn.active {
+	color: #008cd0;
+	opacity: 1;
+	cursor: default;
+	pointer-events: none;
+}
+
+@media (hover: hover) {
+	.about-btn.active:hover {
+		opacity: 1;
+	}
+}
+
 @media (max-width: 800px) {
 	.about-btn {
 		position: fixed;

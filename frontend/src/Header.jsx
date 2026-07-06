@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
 	IconBadgeAlert,
-	IconExit,
 	IconGithub,
 	IconPublicStats,
 	IconStar,
@@ -46,9 +45,16 @@ export default function Header() {
 	return (
 		<header className='site-header'>
 			<div className='inner'>
-				<Link to={isAbout ? '/' : '/about'} className='about-btn'>
-					{isAbout ? <IconExit size={16} /> : <IconBadgeAlert size={16} />}
-					<span>{isAbout ? 'Exit' : 'About'}</span>
+				<Link
+					to='/about'
+					className={`about-btn${isAbout ? ' active' : ''}`}
+					aria-disabled={isAbout}
+					tabIndex={isAbout ? -1 : undefined}
+					onClick={(e) => {
+						if (isAbout) e.preventDefault()
+					}}>
+					<IconBadgeAlert size={16} />
+					<span>About</span>
 				</Link>
 				<div
 					className='header-logo'
