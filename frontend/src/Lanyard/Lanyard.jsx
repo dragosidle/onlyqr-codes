@@ -317,8 +317,9 @@ function Band({
           color="white"
           depthTest={false}
           resolution={isMobile ? [1000, 2000] : [1000, 1000]}
-          useMap
-          map={texture}
+          transparent
+          useAlphaMap
+          alphaMap={texture}
           repeat={[-4, 1]}
           lineWidth={lanyardWidth}
         />
