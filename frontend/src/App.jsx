@@ -1168,7 +1168,7 @@ export default function App() {
 							{isEmpty && (qrType !== 'vCard' || !showVcardForm) && (
 								<motion.div
 									key='placeholder'
-									className='qr-col'
+									className='qr-col qr-placeholder-col'
 									initial={{ opacity: 0, y: 40 }}
 									animate={{ opacity: 1, y: 0 }}
 									exit={{ opacity: 0, y: 40 }}

@@ -247,6 +247,21 @@ body {
 	position: relative;
 	/* Room above the cards for the floating domain chips. */
 	padding-top: 32px;
+	/* Reserve the row's height while the placeholder — its only content when no
+	   codes exist — sits out of flow: 32px padding + 12px preview padding +
+	   248px QR. */
+	min-height: 292px;
+}
+
+/* Out of flow so a card entering while the placeholder is still animating out
+   is centered immediately, instead of being pushed aside (flex treats the
+   exiting placeholder as the center) until its exit completes. */
+.qr-placeholder-col {
+	position: absolute;
+	top: 32px; /* mirrors .qr-row's padding-top */
+	left: 0;
+	right: 0;
+	pointer-events: none;
 }
 
 .qr-col {
