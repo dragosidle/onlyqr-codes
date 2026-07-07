@@ -323,6 +323,10 @@ export default function App() {
 	// Skip x animation on the first centering when data was pre-loaded from
 	// localStorage (track appears instantly, so animating x would cause a slide).
 	const pageLoadWithData = useRef(domains.length > 0)
+	// Set when the track is about to (re)mount — trackX may hold a stale value
+	// from before it unmounted, so the next centering must snap instead of
+	// animate. Cleared only once a centering actually lands (track measurable).
+	const snapNextCenterRef = useRef(false)
 	// Drag state — set true during a drag so card click handlers don't fire.
 	const isDraggingRef = useRef(false)
 	const centerActiveCard = () => {
@@ -330,9 +334,10 @@ export default function App() {
 		const card = activeDomain && cardRefs.current[activeDomain.url]
 		if (!track || !card) return
 		const newX = track.offsetWidth / 2 - (card.offsetLeft + card.offsetWidth / 2)
-		if (pageLoadWithData.current) {
+		if (pageLoadWithData.current || snapNextCenterRef.current) {
 			trackX.set(newX)
 			pageLoadWithData.current = false
+			snapNextCenterRef.current = false
 		} else {
 			animateMotion(trackX, newX, { duration: 0.5, ease: [0.16, 1, 0.3, 1] })
 		}
@@ -343,11 +348,19 @@ export default function App() {
 	// and would cause a double move. onExitComplete + ResizeObserver re-center
 	// once the card has fully unmounted (a single, clean slide to center).
 	const prevLenRef = useRef(domains.length)
+	// Mirrors the render condition on the track below. The track mounts one
+	// render *after* the first domain is added (isEmpty flips in an effect), so
+	// keying this effect on data changes alone would center against a null track
+	// and never re-run — leaving the first card at whatever stale trackX held.
+	const trackVisible = !isEmpty && (qrType !== 'vCard' || !showVcardForm)
+	const prevTrackVisibleRef = useRef(trackVisible)
 	useLayoutEffect(() => {
 		const shrank = domains.length < prevLenRef.current
 		prevLenRef.current = domains.length
+		if (trackVisible && !prevTrackVisibleRef.current) snapNextCenterRef.current = true
+		prevTrackVisibleRef.current = trackVisible
 		if (!shrank) centerActiveCard()
-	}, [activeDomain?.url, domains.length])
+	}, [activeDomain?.url, domains.length, trackVisible])
 
 	// A deleted card stays mounted through its exit animation, so the layout
 	// effect above measures stale offsets. Observe the track's actual size and
@@ -366,7 +379,9 @@ export default function App() {
 			ro.disconnect()
 			window.removeEventListener('resize', onResize)
 		}
-	}, [])
+		// Re-attach when the track (re)mounts — observing the old, unmounted node
+		// would leave later size changes (and their re-centering) unnoticed.
+	}, [trackVisible])
 
 	// Live weekly counter
 	const [weekCount, setWeekCount] = useState(null)
