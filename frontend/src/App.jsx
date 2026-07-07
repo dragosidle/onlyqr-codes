@@ -606,6 +606,23 @@ export default function App() {
 		URL.revokeObjectURL(url)
 	}
 
+	// Enter moves to the next field (like Tab) instead of submitting the form,
+	// since the vCard form has no natural "last field" submit affordance.
+	const focusNextVcardField = (e) => {
+		if (e.key !== 'Enter') return
+		e.preventDefault()
+		const container = e.target.closest('.lanyard-face-inner') || document
+		const focusable = Array.from(container.querySelectorAll('input, textarea, select, button')).filter(
+			(el) => !el.disabled && el.tabIndex !== -1,
+		)
+		const idx = focusable.indexOf(e.target)
+		if (idx > -1 && idx < focusable.length - 1) {
+			focusable[idx + 1].focus()
+		} else {
+			e.target.blur()
+		}
+	}
+
 	// The vCard form fields, rendered onto the Lanyard card's front face (via
 	// drei <Html>) when qrType === 'vCard'. Shared as a variable so the inputs
 	// stay the same controlled elements wherever they're mounted.
@@ -620,7 +637,7 @@ export default function App() {
 					placeholder='Ada Lovelace'
 					value={vcardName}
 					onChange={(e) => setVcardName(e.target.value)}
-					onKeyDown={(e) => e.key === 'Enter' && generate()}
+					onKeyDown={focusNextVcardField}
 					maxLength={80}
 				/>
 			</div>
@@ -633,7 +650,7 @@ export default function App() {
 						placeholder='Company'
 						value={vcardOrg}
 						onChange={(e) => setVcardOrg(e.target.value)}
-						onKeyDown={(e) => e.key === 'Enter' && generate()}
+						onKeyDown={focusNextVcardField}
 						maxLength={80}
 					/>
 					<input
@@ -641,7 +658,7 @@ export default function App() {
 						placeholder='Title'
 						value={vcardTitle}
 						onChange={(e) => setVcardTitle(e.target.value)}
-						onKeyDown={(e) => e.key === 'Enter' && generate()}
+						onKeyDown={focusNextVcardField}
 						maxLength={80}
 					/>
 				</div>
@@ -654,7 +671,7 @@ export default function App() {
 					placeholder='+1 555 123 4567'
 					value={vcardPhone}
 					onChange={(e) => setVcardPhone(e.target.value)}
-					onKeyDown={(e) => e.key === 'Enter' && generate()}
+					onKeyDown={focusNextVcardField}
 					maxLength={32}
 				/>
 			</div>
@@ -666,7 +683,7 @@ export default function App() {
 					placeholder='ada@example.com'
 					value={vcardEmail}
 					onChange={(e) => setVcardEmail(e.target.value)}
-					onKeyDown={(e) => e.key === 'Enter' && generate()}
+					onKeyDown={focusNextVcardField}
 					maxLength={254}
 				/>
 			</div>
@@ -678,7 +695,7 @@ export default function App() {
 					placeholder='example.com (optional)'
 					value={vcardUrl}
 					onChange={(e) => setVcardUrl(e.target.value)}
-					onKeyDown={(e) => e.key === 'Enter' && generate()}
+					onKeyDown={focusNextVcardField}
 					maxLength={500}
 				/>
 			</div>
@@ -690,7 +707,7 @@ export default function App() {
 					placeholder='Optional'
 					value={vcardAddress}
 					onChange={(e) => setVcardAddress(e.target.value)}
-					onKeyDown={(e) => e.key === 'Enter' && generate()}
+					onKeyDown={focusNextVcardField}
 					maxLength={200}
 				/>
 			</div>
