@@ -241,6 +241,15 @@ function Band({
   const [dragged, drag] = useState(false);
   const [hovered, hover] = useState(false);
 
+  // The form must disappear when the card shows its back, or it paints
+  // mirrored over the card (the DOM always draws on top of the canvas, so the
+  // card's own geometry can't occlude it). CSS backface-visibility is
+  // unreliable on drei's wrapper because its matrix3d is rewritten every
+  // frame, so instead the frame loop below toggles visibility from the card's
+  // actual physics orientation.
+  const faceEl = useRef(null);
+  const quat = new THREE.Quaternion();
+
   useRopeJoint(fixed, j1, [[0, 0, 0], [0, 0, 0], 1]);
   useRopeJoint(j1, j2, [[0, 0, 0], [0, 0, 0], 1]);
   useRopeJoint(j2, j3, [[0, 0, 0], [0, 0, 0], 1]);
@@ -281,6 +290,15 @@ function Band({
       ang.copy(card.current.angvel());
       rot.copy(card.current.rotation());
       card.current.setAngvel({ x: ang.x, y: ang.y - rot.y * 0.25, z: ang.z });
+    }
+    if (faceEl.current && card.current) {
+      // Front-facing test: card's local +Z normal (the form sits at z +0.02)
+      // against the card→camera direction.
+      const r = card.current.rotation();
+      quat.set(r.x, r.y, r.z, r.w);
+      dir.set(0, 0, 1).applyQuaternion(quat);
+      vec.copy(state.camera.position).sub(card.current.translation());
+      faceEl.current.style.visibility = dir.dot(vec) > 0 ? 'visible' : 'hidden';
     }
   });
 
@@ -339,7 +357,7 @@ function Band({
                 className="lanyard-face"
                 prepend
               >
-                <div className="lanyard-face-inner" onPointerDown={e => e.stopPropagation()}>
+                <div className="lanyard-face-inner" ref={faceEl} onPointerDown={e => e.stopPropagation()}>
                   {cardFace}
                 </div>
               </Html>
