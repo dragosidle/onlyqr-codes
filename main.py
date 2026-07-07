@@ -12,6 +12,7 @@ from pathlib import Path
 
 import httpx
 import redis.asyncio as aioredis
+import segno.helpers
 from fastapi import FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
@@ -186,6 +187,35 @@ async def generate_wifi_qr(request: Request, body: WifiQrRequest):
     svg = build_svg_cached(wifi_uri, body.hole, body.shape)
     await _increment_daily_counter()
     return Response(content=svg, media_type="image/svg+xml")
+
+
+class VcardQrRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=80)
+    phone: str = Field(default="", max_length=32)
+    email: str = Field(default="", max_length=254)
+    org: str = Field(default="", max_length=80)
+    url: str = Field(default="", max_length=500)
+    hole: str | None = Field(default=None, pattern="^(small|medium|large)$")
+    shape: str = Field(default="square", pattern="^(square|circle)$")
+
+
+@app.post("/api/qr/vcard")
+@limiter.limit("30/minute")
+async def generate_vcard_qr(request: Request, body: VcardQrRequest):
+    vcard = segno.helpers.make_vcard_data(
+        name=body.name,
+        displayname=body.name,
+        phone=body.phone or None,
+        email=body.email or None,
+        org=body.org or None,
+        url=body.url or None,
+    )
+    svg = build_svg_cached(vcard, body.hole, body.shape)
+    await _increment_daily_counter()
+    headers = {
+        "Content-Disposition": f'inline; filename="qr-{make_filename(body.name)}.svg"'
+    }
+    return Response(content=svg, media_type="image/svg+xml", headers=headers)
 
 
 @app.get("/api/stats/week")
