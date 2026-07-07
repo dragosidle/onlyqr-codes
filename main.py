@@ -189,6 +189,26 @@ async def generate_wifi_qr(request: Request, body: WifiQrRequest):
     return Response(content=svg, media_type="image/svg+xml")
 
 
+# segno.helpers.make_vcard_data writes `name` straight into the N field with
+# no splitting and no escaping (unlike every other field it builds), so a
+# bare "John Michael Doe" ends up as one unparsed N token instead of the
+# required Family;Given;Additional;Prefixes;Suffixes structure — most contact
+# apps then dump the whole name into "last name" and leave first name blank.
+_VCARD_ESCAPE = str.maketrans({c: f"\\{c}" for c in '\\;":'})
+
+
+def _split_vcard_name(full_name: str) -> str:
+    parts = full_name.split()
+    if len(parts) <= 1:
+        family, given, additional = "", full_name, ""
+    else:
+        family, given, additional = parts[-1], parts[0], " ".join(parts[1:-1])
+    family, given, additional = (
+        p.translate(_VCARD_ESCAPE) for p in (family, given, additional)
+    )
+    return f"{family};{given};{additional};;"
+
+
 class VcardQrRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=80)
     phone: str = Field(default="", max_length=32)
@@ -205,7 +225,7 @@ class VcardQrRequest(BaseModel):
 @limiter.limit("30/minute")
 async def generate_vcard_qr(request: Request, body: VcardQrRequest):
     vcard = segno.helpers.make_vcard_data(
-        name=body.name,
+        name=_split_vcard_name(body.name),
         displayname=body.name,
         phone=body.phone or None,
         email=body.email or None,
