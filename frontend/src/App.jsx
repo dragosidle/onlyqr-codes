@@ -170,6 +170,10 @@ function ConfirmButton({ className, onClick, children, ...props }) {
 
 export default function App() {
 	const [qrType, setQrType] = useState('Link') // stores the label string
+	// Whether the vCard lanyard form (vs. the generated QR track) is shown.
+	// Reset to true whenever the vCard tab is (re)selected, and cleared once a
+	// vCard QR is generated so the result appears in the track like other types.
+	const [showVcardForm, setShowVcardForm] = useState(true)
 	const tabRefs = useRef([])
 	const [indicatorStyle, setIndicatorStyle] = useState({})
 	const [hoveredTab, setHoveredTab] = useState(null)
@@ -487,6 +491,7 @@ export default function App() {
 				[...prev, { url: value, type: qrType, svgs, punched: false, vcard }].slice(-MAX_DOMAINS),
 			)
 			setActiveUrl(value)
+			if (qrType === 'vCard') setShowVcardForm(false)
 			setNewUrls((prev) => new Set([...prev, value]))
 			document.activeElement?.blur()
 		} catch (e) {
@@ -768,7 +773,7 @@ export default function App() {
 			    screen behind the header. The canvas is a fixed background layer
 			    (pointer-events: none) so page UI stays clickable; the form on the
 			    card re-enables pointer events on itself. */}
-			{isEmpty && qrType === 'vCard' && (
+			{qrType === 'vCard' && showVcardForm && (
 				<div className='vcard-lanyard-bg'>
 					<Suspense fallback={null}>
 						<Lanyard position={[0, 0, 11]} cardFace={vcardFormFields} backImage={lanyardBackLogo} />
@@ -789,7 +794,10 @@ export default function App() {
 											ref={(el) => (tabRefs.current[i] = el)}
 											className={`type-tab${qrType === label ? ' active' : ''}${isDisabled ? ' disabled' : ''}`}
 											disabled={isDisabled}
-											onClick={() => setQrType(label)}>
+											onClick={() => {
+												setQrType(label)
+												if (label === 'vCard') setShowVcardForm(true)
+											}}>
 											<Icon size={16} />
 											{label}
 										</button>
@@ -913,7 +921,7 @@ export default function App() {
 							    suppresses the track's enter on page load (present at mount),
 							    but lets it swipe up when first added (new child). */}
 						<AnimatePresence initial={false}>
-							{!isEmpty && (
+							{!isEmpty && (qrType !== 'vCard' || !showVcardForm) && (
 								// Carousel track: all domain cards in a row, translated so the
 								// active (newest by default) card is centered. Generating a new
 								// domain appends a card at the right and slides the track left,
@@ -1082,7 +1090,7 @@ export default function App() {
 							)}
 						</AnimatePresence>
 						<AnimatePresence initial={false}>
-							{isEmpty && qrType !== 'vCard' && (
+							{isEmpty && (qrType !== 'vCard' || !showVcardForm) && (
 								<motion.div
 									key='placeholder'
 									className='qr-col'
