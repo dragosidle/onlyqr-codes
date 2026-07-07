@@ -15,6 +15,12 @@ import './Lanyard.css';
 
 extend({ MeshLineGeometry, MeshLineMaterial });
 
+// Warm the asset caches as soon as this (lazy-loaded) chunk arrives, so the
+// first mount doesn't stall on fetching/decoding the card model and band
+// texture.
+useGLTF.preload(cardGLB);
+useTexture.preload(lanyard);
+
 // 1x1 transparent pixel — lets useTexture be called unconditionally when a
 // front/back image isn't supplied.
 const BLANK_PIXEL =
@@ -40,7 +46,13 @@ export default function Lanyard({
   // Live DOM rendered onto the card's front face via drei <Html transform>.
   // Swings/rotates with the card. cardFaceDistanceFactor tunes its size (see Band).
   cardFace = null,
-  cardFaceDistanceFactor = 0.9
+  cardFaceDistanceFactor = 0.9,
+  // When false the canvas stays mounted but pauses the simulation and drops
+  // to on-demand rendering, so (re-)entering the vCard tab reuses the
+  // existing WebGL context instead of paying context creation again.
+  // 'demand' (rather than 'never') lets the scene render its initial frames
+  // while faded out, so shaders/env-map are already compiled on first reveal.
+  active = true
 }) {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
 
@@ -56,10 +68,11 @@ export default function Lanyard({
         camera={{ position: position, fov: fov }}
         dpr={[1, isMobile ? 1.5 : 2]}
         gl={{ alpha: transparent }}
+        frameloop={active ? 'always' : 'demand'}
         onCreated={({ gl }) => gl.setClearColor(new THREE.Color(0x000000), transparent ? 0 : 1)}
       >
         <ambientLight intensity={Math.PI} />
-        <Physics gravity={gravity} timeStep={isMobile ? 1 / 30 : 1 / 60}>
+        <Physics paused={!active} gravity={gravity} timeStep={isMobile ? 1 / 30 : 1 / 60}>
           <Band
             isMobile={isMobile}
             frontImage={frontImage}

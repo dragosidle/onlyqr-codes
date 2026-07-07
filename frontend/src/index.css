@@ -650,6 +650,13 @@ body {
 		box-shadow 100ms ease;
 }
 
+/* Wrapper animated to height 0 when vCard is selected. `clip` with a margin
+   (rather than `hidden`) so the pill's focus shadow isn't cut off at rest. */
+.input-area-collapse {
+	overflow: clip;
+	overflow-clip-margin: 6px;
+}
+
 .input-with-action.full-width {
 	width: 100%;
 	margin: 0;
@@ -922,10 +929,25 @@ body {
 	inset: 0;
 	z-index: 1;
 	pointer-events: none;
+	opacity: 1;
+	/* visibility transitions with the fade: stays visible while fading out,
+	   flips to visible immediately when fading in. */
+	transition:
+		opacity 400ms ease,
+		visibility 400ms;
 }
 
 .vcard-lanyard-bg .lanyard-wrapper {
 	height: 100vh;
+}
+
+/* Kept mounted (WebGL context alive, render loop paused) while another QR
+   type is selected — on desktop from initial page load — so entering vCard
+   is just this fade instead of rebuilding the whole scene. visibility:hidden
+   keeps the invisible form from catching focus or clicks. */
+.vcard-lanyard-bg--hidden {
+	opacity: 0;
+	visibility: hidden;
 }
 
 /* drei's <Html transform> renders the form as a CSS3D-transformed DOM node,

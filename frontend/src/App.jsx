@@ -174,6 +174,46 @@ export default function App() {
 	// Reset to true whenever the vCard tab is (re)selected, and cleared once a
 	// vCard QR is generated so the result appears in the track like other types.
 	const [showVcardForm, setShowVcardForm] = useState(true)
+	// Once the lanyard has mounted, keep it mounted (faded out, render loop
+	// paused) across tab switches: tearing down and recreating the WebGL
+	// context, shader programs, and physics world on every vCard entrance
+	// causes a visible hitch. On desktop it mounts eagerly at page load so the
+	// scene is already warm (assets loaded, shaders compiled) and the first
+	// switch to vCard is just an opacity fade; on mobile it waits for the
+	// first vCard selection to avoid the 3D scene's cost for users who may
+	// never open that tab.
+	const lanyardVisible = qrType === 'vCard' && showVcardForm
+	const [lanyardMounted, setLanyardMounted] = useState(
+		() => typeof window !== 'undefined' && window.matchMedia('(min-width: 801px)').matches
+	)
+	// The lanyard's opacity fade-in waits until the QR track / placeholder has
+	// finished animating out of the row, so the two never overlap on screen.
+	// Set by the qr-row AnimatePresence onExitComplete callbacks below (guarded
+	// so unrelated exits, e.g. the placeholder leaving when the first QR is
+	// generated, don't mark the row clear), reset whenever the lanyard hides.
+	const [qrRowExited, setQrRowExited] = useState(false)
+	useLayoutEffect(() => {
+		if (!lanyardVisible) setQrRowExited(false)
+	}, [lanyardVisible])
+	const onQrRowExitComplete = () => {
+		if (lanyardVisible) setQrRowExited(true)
+	}
+	const lanyardShown = lanyardVisible && qrRowExited
+	useEffect(() => {
+		if (lanyardVisible) setLanyardMounted(true)
+	}, [lanyardVisible])
+
+	// Fetch the lanyard chunk (three.js + rapier) while the browser is idle so
+	// the first switch to vCard doesn't stall on download + parse.
+	useEffect(() => {
+		const prefetch = () => import('./Lanyard/Lanyard.jsx')
+		if ('requestIdleCallback' in window) {
+			const id = requestIdleCallback(prefetch)
+			return () => cancelIdleCallback(id)
+		}
+		const id = setTimeout(prefetch, 2000)
+		return () => clearTimeout(id)
+	}, [])
 	const tabRefs = useRef([])
 	const [indicatorStyle, setIndicatorStyle] = useState({})
 	const [hoveredTab, setHoveredTab] = useState(null)
@@ -789,10 +829,15 @@ export default function App() {
 			    screen behind the header. The canvas is a fixed background layer
 			    (pointer-events: none) so page UI stays clickable; the form on the
 			    card re-enables pointer events on itself. */}
-			{qrType === 'vCard' && showVcardForm && (
-				<div className='vcard-lanyard-bg'>
+			{(lanyardVisible || lanyardMounted) && (
+				<div className={`vcard-lanyard-bg${lanyardShown ? '' : ' vcard-lanyard-bg--hidden'}`}>
 					<Suspense fallback={null}>
-						<Lanyard position={[0, 0, 11]} cardFace={vcardFormFields} backImage={lanyardBackLogo} />
+						<Lanyard
+							position={[0, 0, 11]}
+							active={lanyardShown}
+							cardFace={vcardFormFields}
+							backImage={lanyardBackLogo}
+						/>
 					</Suspense>
 				</div>
 			)}
@@ -835,98 +880,111 @@ export default function App() {
 								})}
 							</div>
 
-							{qrType === 'Wi-Fi' ? (
-								<div className='input-with-action full-width wifi-inputs'>
-									<input
-										ref={wifiSsidRef}
-										type='text'
-										placeholder='Wi-Fi name (SSID)'
-										value={wifiSsid}
-										onChange={(e) => setWifiSsid(e.target.value)}
-										onKeyDown={(e) => e.key === 'Enter' && generate()}
-										maxLength={32}
-									/>
-									<div className='wifi-password-field'>
-										<input
-											type={wifiPasswordVisible ? 'text' : 'password'}
-											placeholder='Password'
-											value={wifiPassword}
-											onChange={(e) => setWifiPassword(e.target.value)}
-											onKeyDown={(e) => e.key === 'Enter' && generate()}
-											maxLength={63}
-										/>
-										<button
-											type='button'
-											className='eye-toggle'
-											aria-label={wifiPasswordVisible ? 'Hide password' : 'Show password'}
-											onClick={() => setWifiPasswordVisible((v) => !v)}>
-											{wifiPasswordVisible ? (
-												<IconEyeOpen size={18} />
-											) : (
-												<IconEyeClosed size={18} />
-											)}
-										</button>
-									</div>
-									<GenerateButton
-										onClick={generate}
-										disabled={loading || wifiSsid.length === 0}
-										hasText={wifiSsid.length > 0}
-										shaking={shaking}
-										onShakeEnd={() => setShaking(false)}
-									/>
-									{wifiSsid.length > 0 && (
-										<ClearButton
-											key='clear-wifi'
-											onClick={() => {
-												setWifiSsid('')
-												setWifiPassword('')
-											}}
-										/>
-									)}
-								</div>
-							) : qrType === 'vCard' ? (
-									// The vCard fields live inside the 3D Lanyard card, rendered in the
-									// .qr-row preview area below (see the Lanyard cardFace prop).
-									null
-							) : (
-								<motion.div
-									layout='size'
-									className={`input-with-action${qrType === 'Text' ? ' full-width' : ''}`}
-									transition={{ layout: { duration: 0.35, ease: [0.16, 1, 0.3, 1] } }}>
-									<span ref={sizerRef} className='input-sizer' aria-hidden='true'>
-										{text || 'domain.com'}
-									</span>
-									<input
-										ref={inputRef}
-										type='text'
-										name='url'
-										value={text}
-										placeholder={
-											qrType === 'Text'
-												? 'You forget a thousand things everyday, pal.'
-												: 'domain.com'
-										}
-										style={
-											qrType !== 'Text' && inputWidth ? { width: `${inputWidth}px` } : undefined
-										}
-										onChange={(e) => {
-											let v = stripDiacritics(e.target.value)
-											if (qrType === 'Link') v = v.replace(/ /g, '-')
-											setText(v)
-										}}
-										onKeyDown={(e) => e.key === 'Enter' && generate()}
-										maxLength={500}
-									/>
-									<GenerateButton
-										onClick={generate}
-										disabled={loading || text.length === 0}
-										hasText={text.length > 0}
-										shaking={shaking}
-										onShakeEnd={() => setShaking(false)}
-									/>
-									{text.length > 0 && <ClearButton key='clear-text' onClick={() => setText('')} />}
-								</motion.div>
-							)}
+							{/* vCard has no input pill — its fields live inside the 3D Lanyard
+							    card (see the Lanyard cardFace prop). The input area collapses
+							    smoothly (instead of unmounting to null) when vCard is selected,
+							    so the qr-row below glides up while the track/placeholder fades
+							    out rather than jumping. */}
+							<AnimatePresence initial={false}>
+								{qrType !== 'vCard' && (
+									<motion.div
+										key='input-area'
+										className='input-area-collapse'
+										initial={{ height: 0, opacity: 0 }}
+										animate={{ height: 'auto', opacity: 1 }}
+										exit={{ height: 0, opacity: 0 }}
+										transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}>
+										{qrType === 'Wi-Fi' ? (
+											<div className='input-with-action full-width wifi-inputs'>
+												<input
+													ref={wifiSsidRef}
+													type='text'
+													placeholder='Wi-Fi name (SSID)'
+													value={wifiSsid}
+													onChange={(e) => setWifiSsid(e.target.value)}
+													onKeyDown={(e) => e.key === 'Enter' && generate()}
+													maxLength={32}
+												/>
+												<div className='wifi-password-field'>
+													<input
+														type={wifiPasswordVisible ? 'text' : 'password'}
+														placeholder='Password'
+														value={wifiPassword}
+														onChange={(e) => setWifiPassword(e.target.value)}
+														onKeyDown={(e) => e.key === 'Enter' && generate()}
+														maxLength={63}
+													/>
+													<button
+														type='button'
+														className='eye-toggle'
+														aria-label={wifiPasswordVisible ? 'Hide password' : 'Show password'}
+														onClick={() => setWifiPasswordVisible((v) => !v)}>
+														{wifiPasswordVisible ? (
+															<IconEyeOpen size={18} />
+														) : (
+															<IconEyeClosed size={18} />
+														)}
+													</button>
+												</div>
+												<GenerateButton
+													onClick={generate}
+													disabled={loading || wifiSsid.length === 0}
+													hasText={wifiSsid.length > 0}
+													shaking={shaking}
+													onShakeEnd={() => setShaking(false)}
+												/>
+												{wifiSsid.length > 0 && (
+													<ClearButton
+														key='clear-wifi'
+														onClick={() => {
+															setWifiSsid('')
+															setWifiPassword('')
+														}}
+													/>
+												)}
+											</div>
+										) : (
+											<motion.div
+												layout='size'
+												className={`input-with-action${qrType === 'Text' ? ' full-width' : ''}`}
+												transition={{ layout: { duration: 0.35, ease: [0.16, 1, 0.3, 1] } }}>
+												<span ref={sizerRef} className='input-sizer' aria-hidden='true'>
+													{text || 'domain.com'}
+												</span>
+												<input
+													ref={inputRef}
+													type='text'
+													name='url'
+													value={text}
+													placeholder={
+														qrType === 'Text'
+															? 'You forget a thousand things everyday, pal.'
+															: 'domain.com'
+													}
+													style={
+														qrType !== 'Text' && inputWidth ? { width: `${inputWidth}px` } : undefined
+													}
+													onChange={(e) => {
+														let v = stripDiacritics(e.target.value)
+														if (qrType === 'Link') v = v.replace(/ /g, '-')
+														setText(v)
+													}}
+													onKeyDown={(e) => e.key === 'Enter' && generate()}
+													maxLength={500}
+												/>
+												<GenerateButton
+													onClick={generate}
+													disabled={loading || text.length === 0}
+													hasText={text.length > 0}
+													shaking={shaking}
+													onShakeEnd={() => setShaking(false)}
+												/>
+												{text.length > 0 && <ClearButton key='clear-text' onClick={() => setText('')} />}
+											</motion.div>
+										)}
+									</motion.div>
+								)}
+							</AnimatePresence>
 
 							{error && <p className='error'>{error}</p>}
 						</section>
@@ -936,7 +994,7 @@ export default function App() {
 						{/* AnimatePresence is always mounted so initial={false} only
 							    suppresses the track's enter on page load (present at mount),
 							    but lets it swipe up when first added (new child). */}
-						<AnimatePresence initial={false}>
+						<AnimatePresence initial={false} onExitComplete={onQrRowExitComplete}>
 							{!isEmpty && (qrType !== 'vCard' || !showVcardForm) && (
 								// Carousel track: all domain cards in a row, translated so the
 								// active (newest by default) card is centered. Generating a new
@@ -949,6 +1007,7 @@ export default function App() {
 									style={{ x: trackX }}
 									initial={{ opacity: 0 }}
 									animate={{ opacity: 1 }}
+									exit={{ opacity: 0 }}
 									transition={{ opacity: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}
 									data-single={domains.length === 1 || undefined}
 									drag={domains.length > 1 ? 'x' : false}
@@ -1105,7 +1164,7 @@ export default function App() {
 								</motion.div>
 							)}
 						</AnimatePresence>
-						<AnimatePresence initial={false}>
+						<AnimatePresence initial={false} onExitComplete={onQrRowExitComplete}>
 							{isEmpty && (qrType !== 'vCard' || !showVcardForm) && (
 								<motion.div
 									key='placeholder'
