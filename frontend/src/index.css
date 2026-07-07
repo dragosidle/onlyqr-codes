@@ -764,7 +764,8 @@ body {
 	transition: background-color 9999s ease-in-out 0s;
 }
 
-.input-with-action .generate-btn {
+.input-with-action .generate-btn,
+.lanyard-face-inner .vcard-footer .generate-btn {
 	flex-shrink: 0;
 	border: none;
 	font-size: 14px;
@@ -776,7 +777,8 @@ body {
 }
 
 @media (hover: hover) {
-	.input-with-action .generate-btn:hover:not(:disabled) {
+	.input-with-action .generate-btn:hover:not(:disabled),
+	.lanyard-face-inner .vcard-footer .generate-btn:hover:not(:disabled) {
 		background: #2b79ff !important;
 		transition:
 			background 100ms ease,
@@ -785,7 +787,8 @@ body {
 	}
 }
 
-.input-with-action .generate-btn:disabled {
+.input-with-action .generate-btn:disabled,
+.lanyard-face-inner .vcard-footer .generate-btn:disabled {
 	cursor: default;
 	background: #e7e7e7 !important;
 	color: #858585 !important;
@@ -862,7 +865,7 @@ body {
 
 .vcard-footer {
 	display: flex;
-	justify-content: flex-end;
+	justify-content: flex-start;
 	align-items: center;
 	gap: 8px;
 	margin-top: 4px;
@@ -917,7 +920,7 @@ body {
 	gap: 9px;
 	padding: 20px 18px;
 	border-radius: 18px;
-	background: rgba(255, 255, 255, 0.94);
+	/* background: rgba(255, 255, 255, 0.94); */
 	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
 	font-family: inherit;
 }
@@ -956,7 +959,27 @@ body {
 
 .lanyard-face-inner .vcard-footer {
 	margin-top: 6px;
-	justify-content: space-between;
+	justify-content: flex-start;
+}
+
+/* The shared .clear-btn floats absolutely beside the text-input pill; inside
+   the card footer it must flow inline, right of the Generate button. */
+.lanyard-face-inner .vcard-footer .clear-btn {
+	position: static;
+	/* clear-btn-enter animates to translate:0 -50% with fill-mode both, which
+	   (as a filling animation) would override translate:none and shift the
+	   button up. Disable it for the in-card, statically-positioned variant. */
+	animation: none;
+	translate: none;
+	left: auto;
+	top: auto;
+	padding: 8px 10px;
+}
+
+@media (max-width: 600px) {
+	.lanyard-face-inner .vcard-footer .clear-btn {
+		display: flex;
+	}
 }
 
 .checkbox {
