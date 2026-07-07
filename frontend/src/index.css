@@ -833,17 +833,11 @@ body {
 	flex: 1 1 auto;
 	min-width: 0;
 	border: none;
-	border-bottom: 1px solid #e8e8e8;
 	background: transparent;
 	padding: 6px 2px;
 	font-size: 16px;
 	color: #111111;
 	outline: none;
-	transition: border-color 120ms ease;
-}
-
-.vcard-row input:focus {
-	border-bottom-color: var(--accent);
 }
 
 .vcard-row input::placeholder {
