@@ -691,7 +691,15 @@ export default function App() {
 									)}
 								</div>
 							) : qrType === 'vCard' ? (
-								<div className='vcard-card'>
+								<AnimatePresence initial={false} mode='popLayout'>
+									{isEmpty && (
+										<motion.div
+											key='vcard-card'
+											className='vcard-card'
+											initial={{ opacity: 0, y: -20 }}
+											animate={{ opacity: 1, y: 0 }}
+											exit={{ opacity: 0, y: -40 }}
+											transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}>
 									<div className='vcard-row'>
 										<label htmlFor='vcard-name'>Full name</label>
 										<input
@@ -804,7 +812,9 @@ export default function App() {
 											/>
 										)}
 									</div>
-								</div>
+									</motion.div>
+								)}
+							</AnimatePresence>
 							) : (
 								<motion.div
 									layout='size'
@@ -1023,12 +1033,13 @@ export default function App() {
 							)}
 						</AnimatePresence>
 						<AnimatePresence initial={false}>
-							{isEmpty && (
+							{isEmpty && qrType !== 'vCard' && (
 								<motion.div
 									key='placeholder'
 									className='qr-col'
-									initial={{ scale: 0.8, opacity: 0 }}
-									animate={{ scale: 1, opacity: 1 }}
+									initial={{ opacity: 0, y: 40 }}
+									animate={{ opacity: 1, y: 0 }}
+									exit={{ opacity: 0, y: 40 }}
 									transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}>
 									<div className='preview'>
 										<IllustrationQRPlaceholder style={{ opacity: 0.25 }} />
