@@ -139,7 +139,10 @@ function Band({
   // half, back = right half). Each image is drawn aspect-preserving (no stretch).
   const cardMap = useMemo(() => {
     const baseMap = materials.base.map;
-    if (!frontImage && !backImage) return baseMap;
+    // Blank the front face when custom DOM content (cardFace) is rendered over
+    // it, so the baked badge artwork/logo doesn't show behind the form.
+    const blankFront = !!cardFace && !frontImage;
+    if (!frontImage && !backImage && !blankFront) return baseMap;
 
     const baseImg = baseMap.image;
     const W = baseImg.width;
@@ -151,6 +154,20 @@ function Band({
     if (!ctx) return baseMap;
     // Keep the original baked atlas for the card edges and any untouched face.
     ctx.drawImage(baseImg, 0, 0, W, H);
+
+    // Cover the front face with its own background colour (sampled from an inset
+    // corner, away from the centred logo) to erase the baked artwork.
+    if (blankFront) {
+      const rx = FRONT_UV_RECT.x * W;
+      const ry = FRONT_UV_RECT.y * H;
+      const rw = FRONT_UV_RECT.w * W;
+      const rh = FRONT_UV_RECT.h * H;
+      const sx = Math.round(rx + rw * 0.08);
+      const sy = Math.round(ry + rh * 0.05);
+      const s = ctx.getImageData(sx, sy, 1, 1).data;
+      ctx.fillStyle = `rgb(${s[0]}, ${s[1]}, ${s[2]})`;
+      ctx.fillRect(rx, ry, rw, rh);
+    }
 
     const drawFitted = (img, rect) => {
       const rx = rect.x * W;
@@ -180,7 +197,7 @@ function Band({
     composite.anisotropy = 16;
     composite.needsUpdate = true;
     return composite;
-  }, [frontImage, backImage, imageFit, frontTex, backTex, materials.base.map]);
+  }, [frontImage, backImage, imageFit, frontTex, backTex, materials.base.map, cardFace]);
   const [curve] = useState(
     () =>
       new THREE.CatmullRomCurve3([new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()])

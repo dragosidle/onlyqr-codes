@@ -208,6 +208,10 @@ body {
 	   itself stays centered (margin: 0 auto) and only grows with its content. */
 	max-width: 100%;
 	min-width: 0;
+	/* Keep the tabs/input pill above the vCard lanyard background layer so the
+	   card drops behind the UI chrome. */
+	position: relative;
+	z-index: 2;
 }
 
 .qr-row {
@@ -879,22 +883,33 @@ body {
 	}
 }
 
-/* ---- vCard rendered on a swinging 3D lanyard badge ---- */
-.vcard-lanyard {
-	width: 100%;
-	display: flex;
-	justify-content: center;
+/* ---- vCard rendered on a full-page 3D lanyard badge ---- */
+/* Fixed background layer: the lanyard drops from the top of the viewport and
+   hangs behind the page chrome. pointer-events: none lets clicks fall through
+   to the UI (and passes drag through, so the card isn't draggable in this
+   mode); the form on the card re-enables pointer events on itself. */
+.vcard-lanyard-bg {
+	position: fixed;
+	inset: 0;
+	z-index: 1;
+	pointer-events: none;
 }
 
-/* Lanyard ships as a full-viewport canvas; constrain it for embedding. */
-.vcard-lanyard .lanyard-wrapper {
-	height: 620px;
+.vcard-lanyard-bg .lanyard-wrapper {
+	height: 100vh;
+}
+
+/* Keep the page header above the lanyard so the band/card drop behind it. */
+.site-header {
+	position: relative;
 }
 
 /* The vCard form composited onto the 3D card face via drei <Html transform>.
    Fixed width so the card-face scale (Lanyard's cardFaceDistanceFactor) stays
-   stable regardless of content. */
+   stable regardless of content. pointer-events: auto re-enables interaction
+   inside the otherwise click-through canvas layer. */
 .lanyard-face-inner {
+	pointer-events: auto;
 	width: 300px;
 	box-sizing: border-box;
 	display: flex;

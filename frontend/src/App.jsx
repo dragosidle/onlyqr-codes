@@ -728,6 +728,17 @@ export default function App() {
 
 	return (
 		<>
+			{/* vCard type: a full-page 3D lanyard that drops from the top of the
+			    screen behind the header. The canvas is a fixed background layer
+			    (pointer-events: none) so page UI stays clickable; the form on the
+			    card re-enables pointer events on itself. */}
+			{isEmpty && qrType === 'vCard' && (
+				<div className='vcard-lanyard-bg'>
+					<Suspense fallback={null}>
+						<Lanyard position={[0, 0, 11]} cardFace={vcardFormFields} />
+					</Suspense>
+				</div>
+			)}
 			<main className='hero'>
 				<div className='app-layout'>
 					<div className='controls-col'>
@@ -1049,15 +1060,6 @@ export default function App() {
 								</motion.div>
 							)}
 						</AnimatePresence>
-							{/* vCard type: the form fields live on the face of a swinging
-							    3D lanyard badge. Drag the card to swing it. */}
-							{isEmpty && qrType === 'vCard' && (
-								<div className='vcard-lanyard'>
-									<Suspense fallback={null}>
-										<Lanyard position={[0, 0, 20]} cardFace={vcardFormFields} />
-									</Suspense>
-								</div>
-							)}
 					</div>
 				</div>
 			</main>
