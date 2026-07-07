@@ -928,6 +928,16 @@ body {
 	height: 100vh;
 }
 
+/* drei's <Html transform> renders the form as a CSS3D-transformed DOM node,
+   not a mesh texture, so it isn't occluded by the card's own back-face
+   geometry and (by default) renders on both sides of its transform plane.
+   Hide it once the card has rotated past 90° so it doesn't show through
+   from the back. */
+.lanyard-face {
+	backface-visibility: hidden;
+	-webkit-backface-visibility: hidden;
+}
+
 /* The vCard form composited onto the 3D card face via drei <Html transform>.
    Fixed width so the card-face scale (Lanyard's cardFaceDistanceFactor) stays
    stable regardless of content. pointer-events: auto re-enables interaction
