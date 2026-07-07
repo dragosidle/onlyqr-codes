@@ -424,6 +424,7 @@ export default function App() {
 		if (domains.some((d) => d.url === value)) {
 			if (activeDomain?.url === value) setShakingUrl(value)
 			else setActiveUrl(value)
+			if (qrType === 'vCard') setShowVcardForm(false)
 			return
 		}
 		setError('')
