@@ -1,5 +1,8 @@
-import onlyQrExampleImg from './only-qr-example.avif'
-import othersQrExampleImg from './others-qr-example.avif'
+import genericQrImg from './generic-qr.png'
+import genericSvgCodeImg from './generic-svg-code.png'
+import onlyQrCodeImg from './only-qr-code.png'
+import onlyQrCodeCodeImg from './only-qr-code-code.png'
+import { LogoMark } from './icons'
 
 export default function About() {
 	return (
@@ -30,24 +33,33 @@ export default function About() {
 				</section>
 
 				<section className='qr-examples'>
-					<div className='qr-examples-inner'>
-						<img
-							src={othersQrExampleImg}
-							alt='Other QR example'
-							className='qr-example qr-example--others'
-						/>
-						<p className='qr-examples-caption'>
-							Most generators produce SVGs made of hundreds of individual squares. Onlyqr.codes
-							merges them all into a single unified shape before rendering. No stacked rectangles,
-							no hidden seams. Logo holes are real cutouts baked into the geometry, not white boxes
-							covering what's underneath. One clean path that scales perfectly.
+					<div className='qr-examples-columns'>
+						<div className='qr-examples-column'>
+							<div className='qr-example-square-wrap'>
+								<span className='qr-example-label'>Other &ldquo;premium&rdquo; QR generators</span>
+								<img src={genericQrImg} alt='Generic QR example' className='qr-example qr-example--square' />
+							</div>
+							<img src={genericSvgCodeImg} alt='Generic QR SVG code' className='qr-example qr-example--code' />
+						</div>
+						<div className='qr-examples-column'>
+							<div className='qr-example-square-wrap'>
+								<LogoMark height={64} className='qr-example-label qr-example-label--logo' />
+								<img src={onlyQrCodeImg} alt='OnlyQR example' className='qr-example qr-example--square' />
+							</div>
+							<img src={onlyQrCodeCodeImg} alt='OnlyQR SVG code' className='qr-example qr-example--code' />
+						</div>
+					</div>
+				</section>
+
+				<section className='manifesto'>
+					<div className='inner'>
+						<p>
+							Most, if not all generators produce SVGs made of hundreds of individual squares.
+							Onlyqr.codes merges them all into a single unified shape before rendering. No stacked
+							rectangles, no hidden seams. Logo holes are real cutouts baked into the geometry, not
+							white boxes covering what's underneath. One clean path that scales perfectly.
 						</p>
-						<img
-							src={onlyQrExampleImg}
-							alt='OnlyQR example'
-							className='qr-example qr-example--only'
-						/>
-						<p className='qr-examples-caption'>
+						<p>
 							Because everything resolves to a single <code>&lt;path&gt;</code> element, the output
 							file is a fraction of the size you'd get from a traditional rect-based generator.
 						</p>
