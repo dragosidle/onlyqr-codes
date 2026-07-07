@@ -81,10 +81,11 @@ _http_client = httpx.AsyncClient(timeout=5.0)
 
 
 # Generations are tallied per UTC hour, not per calendar day. This lets each
-# viewer's "today" total be reconstructed for their own timezone at read time
-# (sum the hourly buckets since their local midnight) without one shared
-# day-bucket leaking counts between timezones.
-_HOUR_BUCKET_TTL = 48 * 3600  # keep enough history for any offset (UTC-12..+14)
+# viewer's "this week" total be reconstructed for their own timezone at read
+# time (sum the hourly buckets since their local week start) without one shared
+# bucket leaking counts between timezones.
+# A week is 168 hours; add a day of slack for any offset (UTC-12..+14).
+_HOUR_BUCKET_TTL = 8 * 24 * 3600
 
 
 def _hour_bucket(dt: datetime.datetime) -> str:
@@ -103,9 +104,9 @@ async def _increment_daily_counter() -> None:
         pass  # non-critical — counter silently skipped if Valkey is down
 
 
-async def _count_since_local_midnight(tz_offset: int) -> int:
-    """Sum hourly buckets from the viewer's local midnight (in their own
-    timezone) through the current UTC hour.
+async def _count_since_local_week_start(tz_offset: int) -> int:
+    """Sum hourly buckets from the start of the viewer's local week (Monday
+    midnight in their own timezone) through the current UTC hour.
 
     tz_offset is JS getTimezoneOffset(): minutes UTC is ahead of local time,
     so local = utc - tz_offset minutes, and utc = local + tz_offset minutes.
@@ -113,7 +114,9 @@ async def _count_since_local_midnight(tz_offset: int) -> int:
     utc_now = datetime.datetime.now(datetime.timezone.utc)
     local_now = utc_now - datetime.timedelta(minutes=tz_offset)
     local_midnight = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
-    start_utc = local_midnight + datetime.timedelta(minutes=tz_offset)
+    # weekday(): Monday is 0, so back up to the most recent Monday.
+    local_week_start = local_midnight - datetime.timedelta(days=local_now.weekday())
+    start_utc = local_week_start + datetime.timedelta(minutes=tz_offset)
 
     start_hour = start_utc.replace(minute=0, second=0, microsecond=0)
     end_hour = utc_now.replace(minute=0, second=0, microsecond=0)
@@ -185,10 +188,10 @@ async def generate_wifi_qr(request: Request, body: WifiQrRequest):
     return Response(content=svg, media_type="image/svg+xml")
 
 
-@app.get("/api/stats/today")
+@app.get("/api/stats/week")
 @limiter.limit("60/minute")
-async def stats_today(request: Request, tz_offset: int = Query(0, ge=-840, le=720)):
-    count = await _count_since_local_midnight(tz_offset)
+async def stats_week(request: Request, tz_offset: int = Query(0, ge=-840, le=720)):
+    count = await _count_since_local_week_start(tz_offset)
     return JSONResponse({"count": count})
 
 

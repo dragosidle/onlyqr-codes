@@ -26,8 +26,8 @@ import onlyQrExampleImg from './only-qr-example.avif'
 import othersQrExampleImg from './others-qr-example.avif'
 
 // JS getTimezoneOffset() returns minutes UTC is ahead of local time (negative
-// for UTC+ zones). Sent only when reading today's count, so each viewer sees
-// the count since their own local midnight.
+// for UTC+ zones). Sent only when reading this week's count, so each viewer sees
+// the count since their own local week start.
 const TZ_OFFSET = new Date().getTimezoneOffset()
 
 // Persisted multi-domain history. Each entry is
@@ -336,17 +336,17 @@ export default function App() {
 		}
 	}, [])
 
-	// Live daily counter
-	const [todayCount, setTodayCount] = useState(null)
+	// Live weekly counter
+	const [weekCount, setWeekCount] = useState(null)
 	const [dotKey, setDotKey] = useState(0)
 
 	useEffect(() => {
 		const poll = async () => {
 			try {
-				const res = await fetch(`/api/stats/today?tz_offset=${TZ_OFFSET}`)
+				const res = await fetch(`/api/stats/week?tz_offset=${TZ_OFFSET}`)
 				if (res.ok) {
 					const { count } = await res.json()
-					setTodayCount(count)
+					setWeekCount(count)
 					setDotKey((k) => k + 1)
 				}
 			} catch {
@@ -858,14 +858,14 @@ export default function App() {
 					</div>
 				</div>
 			</main>
-			{todayCount !== null && (
+			{weekCount !== null && (
 				<motion.p
 					className='today-counter'
 					initial={{ opacity: 0, y: 16, scale: 0.96 }}
 					animate={{ opacity: 1, y: 0, scale: 1 }}
 					transition={{ duration: 0.25, ease: 'easeOut' }}>
 					<span key={dotKey} className='today-dot' />
-					<NumberFlow className='today-count' value={todayCount ?? 0} /> codes generated today
+					<NumberFlow className='today-count' value={weekCount ?? 0} /> codes generated this week
 				</motion.p>
 			)}
 
