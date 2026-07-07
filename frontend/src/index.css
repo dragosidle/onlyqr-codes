@@ -939,20 +939,21 @@ body {
 }
 
 /* The vCard form composited onto the 3D card face via drei <Html transform>.
-   Fixed width so the card-face scale (Lanyard's cardFaceDistanceFactor) stays
-   stable regardless of content. pointer-events: auto re-enables interaction
-   inside the otherwise click-through canvas layer. */
+   Sized to cover the card's front face exactly (face = 0.716 × 1.0 local
+   units; at cardFaceDistanceFactor 0.9, 1px = 0.9/400 units → 318 × 444px),
+   with no background or shadow of its own, so the form reads as printed on
+   the card rather than as a panel floating over it. pointer-events: auto
+   re-enables interaction inside the otherwise click-through canvas layer. */
 .lanyard-face-inner {
 	pointer-events: auto;
-	width: 300px;
+	width: 318px;
+	height: 444px;
 	box-sizing: border-box;
 	display: flex;
 	flex-direction: column;
+	justify-content: center;
 	gap: 9px;
-	padding: 20px 18px;
-	border-radius: 18px;
-	/* background: rgba(255, 255, 255, 0.94); */
-	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+	padding: 22px 20px;
 	font-family: inherit;
 }
 
