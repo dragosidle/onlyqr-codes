@@ -208,6 +208,13 @@ export default function App() {
 	const inputRef = useRef(null)
 	const wifiSsidRef = useRef(null)
 	const vcardNameRef = useRef(null)
+	// The vCard form's DOM node gets rebuilt by drei's <Html> on every keystroke
+	// (its portal children are new elements each render), which can briefly drop
+	// native focus. If a keydown lands outside any input during that window, the
+	// type-to-focus effect below must return focus to whichever vCard field was
+	// actually being edited — not always the first one — or typed characters get
+	// rerouted into the Name field.
+	const lastVcardFieldRef = useRef(null)
 	const [inputWidth, setInputWidth] = useState(null)
 	useLayoutEffect(() => {
 		const el = sizerRef.current
@@ -259,7 +266,11 @@ export default function App() {
 			)
 				return
 			const input =
-				qrType === 'Wi-Fi' ? wifiSsidRef.current : qrType === 'vCard' ? vcardNameRef.current : inputRef.current
+				qrType === 'Wi-Fi'
+					? wifiSsidRef.current
+					: qrType === 'vCard'
+						? lastVcardFieldRef.current || vcardNameRef.current
+						: inputRef.current
 			input?.focus()
 		}
 		window.addEventListener('keydown', onKeyDown)
@@ -637,6 +648,7 @@ export default function App() {
 					placeholder='Ada Lovelace'
 					value={vcardName}
 					onChange={(e) => setVcardName(e.target.value)}
+					onFocus={(e) => (lastVcardFieldRef.current = e.target)}
 					onKeyDown={focusNextVcardField}
 					maxLength={80}
 				/>
@@ -650,6 +662,7 @@ export default function App() {
 						placeholder='Company'
 						value={vcardOrg}
 						onChange={(e) => setVcardOrg(e.target.value)}
+						onFocus={(e) => (lastVcardFieldRef.current = e.target)}
 						onKeyDown={focusNextVcardField}
 						maxLength={80}
 					/>
@@ -658,6 +671,7 @@ export default function App() {
 						placeholder='Title'
 						value={vcardTitle}
 						onChange={(e) => setVcardTitle(e.target.value)}
+						onFocus={(e) => (lastVcardFieldRef.current = e.target)}
 						onKeyDown={focusNextVcardField}
 						maxLength={80}
 					/>
@@ -671,6 +685,7 @@ export default function App() {
 					placeholder='+1 555 123 4567'
 					value={vcardPhone}
 					onChange={(e) => setVcardPhone(e.target.value)}
+					onFocus={(e) => (lastVcardFieldRef.current = e.target)}
 					onKeyDown={focusNextVcardField}
 					maxLength={32}
 				/>
@@ -683,6 +698,7 @@ export default function App() {
 					placeholder='ada@example.com'
 					value={vcardEmail}
 					onChange={(e) => setVcardEmail(e.target.value)}
+					onFocus={(e) => (lastVcardFieldRef.current = e.target)}
 					onKeyDown={focusNextVcardField}
 					maxLength={254}
 				/>
@@ -695,6 +711,7 @@ export default function App() {
 					placeholder='example.com (optional)'
 					value={vcardUrl}
 					onChange={(e) => setVcardUrl(e.target.value)}
+					onFocus={(e) => (lastVcardFieldRef.current = e.target)}
 					onKeyDown={focusNextVcardField}
 					maxLength={500}
 				/>
@@ -707,6 +724,7 @@ export default function App() {
 					placeholder='Optional'
 					value={vcardAddress}
 					onChange={(e) => setVcardAddress(e.target.value)}
+					onFocus={(e) => (lastVcardFieldRef.current = e.target)}
 					onKeyDown={focusNextVcardField}
 					maxLength={200}
 				/>
