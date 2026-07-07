@@ -2,7 +2,7 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, extend, useFrame } from '@react-three/fiber';
-import { useGLTF, useTexture, Environment, Lightformer } from '@react-three/drei';
+import { useGLTF, useTexture, Environment, Lightformer, Html } from '@react-three/drei';
 import { BallCollider, CuboidCollider, Physics, RigidBody, useRopeJoint, useSphericalJoint } from '@react-three/rapier';
 import { MeshLineGeometry, MeshLineMaterial } from 'meshline';
 
@@ -36,7 +36,11 @@ export default function Lanyard({
   backImage = null,
   imageFit = 'cover',
   lanyardImage = null,
-  lanyardWidth = 1
+  lanyardWidth = 1,
+  // Live DOM rendered onto the card's front face via drei <Html transform>.
+  // Swings/rotates with the card. cardFaceDistanceFactor tunes its size (see Band).
+  cardFace = null,
+  cardFaceDistanceFactor = 0.9
 }) {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
 
@@ -63,6 +67,8 @@ export default function Lanyard({
             imageFit={imageFit}
             lanyardImage={lanyardImage}
             lanyardWidth={lanyardWidth}
+            cardFace={cardFace}
+            cardFaceDistanceFactor={cardFaceDistanceFactor}
           />
         </Physics>
         <Environment blur={0.75}>
@@ -107,7 +113,9 @@ function Band({
   backImage = null,
   imageFit = 'cover',
   lanyardImage = null,
-  lanyardWidth = 1
+  lanyardWidth = 1,
+  cardFace = null,
+  cardFaceDistanceFactor = 0.9
 }) {
   const band = useRef(),
     fixed = useRef(),
@@ -264,6 +272,25 @@ function Band({
             </mesh>
             <mesh geometry={nodes.clip.geometry} material={materials.metal} material-roughness={0.3} />
             <mesh geometry={nodes.clamp.geometry} material={materials.metal} />
+            {cardFace && (
+              // The card mesh face spans x[-0.358,0.358] y[0.023,1.023] z~0.005 in
+              // this group's local space, so [0, 0.523, 0.02] centers on it, just
+              // in front. distanceFactor sizes the DOM: on-screen size scales with
+              // worldScale (2.25 here) * distanceFactor/400 — lower it if the form
+              // overflows the card, raise it if it looks too small.
+              <Html
+                transform
+                distanceFactor={cardFaceDistanceFactor}
+                position={[0, 0.523, 0.02]}
+                zIndexRange={[100, 0]}
+                className="lanyard-face"
+                prepend
+              >
+                <div className="lanyard-face-inner" onPointerDown={e => e.stopPropagation()}>
+                  {cardFace}
+                </div>
+              </Html>
+            )}
           </group>
         </RigidBody>
       </group>

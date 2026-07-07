@@ -879,6 +879,71 @@ body {
 	}
 }
 
+/* ---- vCard rendered on a swinging 3D lanyard badge ---- */
+.vcard-lanyard {
+	width: 100%;
+	display: flex;
+	justify-content: center;
+}
+
+/* Lanyard ships as a full-viewport canvas; constrain it for embedding. */
+.vcard-lanyard .lanyard-wrapper {
+	height: 620px;
+}
+
+/* The vCard form composited onto the 3D card face via drei <Html transform>.
+   Fixed width so the card-face scale (Lanyard's cardFaceDistanceFactor) stays
+   stable regardless of content. */
+.lanyard-face-inner {
+	width: 300px;
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	gap: 9px;
+	padding: 20px 18px;
+	border-radius: 18px;
+	background: rgba(255, 255, 255, 0.94);
+	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+	font-family: inherit;
+}
+
+/* Portrait card face → stack label above input to fit the narrow width. */
+.lanyard-face-inner .vcard-row {
+	flex-direction: column;
+	align-items: stretch;
+	gap: 3px;
+}
+
+.lanyard-face-inner .vcard-row label {
+	flex: none;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	color: #9a9a9a;
+}
+
+.lanyard-face-inner .vcard-row input {
+	font-size: 14px;
+	padding: 5px 8px;
+	border-radius: 8px;
+	background: #f4f4f5;
+}
+
+.lanyard-face-inner .vcard-row input::placeholder {
+	opacity: 0.4;
+}
+
+.lanyard-face-inner .vcard-org-fields {
+	flex-direction: row;
+	gap: 8px;
+}
+
+.lanyard-face-inner .vcard-footer {
+	margin-top: 6px;
+	justify-content: space-between;
+}
+
 .checkbox {
 	display: flex;
 	align-items: center;

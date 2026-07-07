@@ -1,4 +1,4 @@
-import { useState, useRef, useLayoutEffect, useEffect } from 'react'
+import { useState, useRef, useLayoutEffect, useEffect, lazy, Suspense } from 'react'
 import { AnimatePresence, motion, useMotionValue, animate as animateMotion } from 'motion/react'
 import NumberFlow from '@number-flow/react'
 import {
@@ -21,6 +21,9 @@ import {
 } from './icons'
 import GenerateButton from './GenerateButton'
 import ClearButton from './ClearButton'
+// Lazy-loaded: the 3D lanyard pulls in three.js + rapier (~3 MB), so it only
+// loads when the vCard tab is opened rather than shipping in the main bundle.
+const Lanyard = lazy(() => import('./Lanyard/Lanyard.jsx'))
 import aliDittherImg from './ali-ditther.avif'
 import onlyQrExampleImg from './only-qr-example.avif'
 import othersQrExampleImg from './others-qr-example.avif'
@@ -603,6 +606,126 @@ export default function App() {
 		URL.revokeObjectURL(url)
 	}
 
+	// The vCard form fields, rendered onto the Lanyard card's front face (via
+	// drei <Html>) when qrType === 'vCard'. Shared as a variable so the inputs
+	// stay the same controlled elements wherever they're mounted.
+	const vcardFormFields = (
+		<>
+			<div className='vcard-row'>
+				<label htmlFor='vcard-name'>Full name</label>
+				<input
+					id='vcard-name'
+					ref={vcardNameRef}
+					type='text'
+					placeholder='Ada Lovelace'
+					value={vcardName}
+					onChange={(e) => setVcardName(e.target.value)}
+					onKeyDown={(e) => e.key === 'Enter' && generate()}
+					maxLength={80}
+				/>
+			</div>
+			<div className='vcard-row'>
+				<label htmlFor='vcard-org'>Organization</label>
+				<div className='vcard-org-fields'>
+					<input
+						id='vcard-org'
+						type='text'
+						placeholder='Company'
+						value={vcardOrg}
+						onChange={(e) => setVcardOrg(e.target.value)}
+						onKeyDown={(e) => e.key === 'Enter' && generate()}
+						maxLength={80}
+					/>
+					<input
+						type='text'
+						placeholder='Title'
+						value={vcardTitle}
+						onChange={(e) => setVcardTitle(e.target.value)}
+						onKeyDown={(e) => e.key === 'Enter' && generate()}
+						maxLength={80}
+					/>
+				</div>
+			</div>
+			<div className='vcard-row'>
+				<label htmlFor='vcard-phone'>Phone number</label>
+				<input
+					id='vcard-phone'
+					type='tel'
+					placeholder='+1 555 123 4567'
+					value={vcardPhone}
+					onChange={(e) => setVcardPhone(e.target.value)}
+					onKeyDown={(e) => e.key === 'Enter' && generate()}
+					maxLength={32}
+				/>
+			</div>
+			<div className='vcard-row'>
+				<label htmlFor='vcard-email'>Email</label>
+				<input
+					id='vcard-email'
+					type='email'
+					placeholder='ada@example.com'
+					value={vcardEmail}
+					onChange={(e) => setVcardEmail(e.target.value)}
+					onKeyDown={(e) => e.key === 'Enter' && generate()}
+					maxLength={254}
+				/>
+			</div>
+			<div className='vcard-row'>
+				<label htmlFor='vcard-url'>Website</label>
+				<input
+					id='vcard-url'
+					type='text'
+					placeholder='example.com (optional)'
+					value={vcardUrl}
+					onChange={(e) => setVcardUrl(e.target.value)}
+					onKeyDown={(e) => e.key === 'Enter' && generate()}
+					maxLength={500}
+				/>
+			</div>
+			<div className='vcard-row'>
+				<label htmlFor='vcard-address'>Address</label>
+				<input
+					id='vcard-address'
+					type='text'
+					placeholder='Optional'
+					value={vcardAddress}
+					onChange={(e) => setVcardAddress(e.target.value)}
+					onKeyDown={(e) => e.key === 'Enter' && generate()}
+					maxLength={200}
+				/>
+			</div>
+			<div className='vcard-footer'>
+				<GenerateButton
+					onClick={generate}
+					disabled={loading || vcardName.trim().length === 0}
+					hasText={vcardName.trim().length > 0}
+					shaking={shaking}
+					onShakeEnd={() => setShaking(false)}
+				/>
+				{(vcardName ||
+					vcardOrg ||
+					vcardTitle ||
+					vcardPhone ||
+					vcardEmail ||
+					vcardUrl ||
+					vcardAddress) && (
+					<ClearButton
+						key='clear-vcard'
+						onClick={() => {
+							setVcardName('')
+							setVcardOrg('')
+							setVcardTitle('')
+							setVcardPhone('')
+							setVcardEmail('')
+							setVcardUrl('')
+							setVcardAddress('')
+						}}
+					/>
+				)}
+			</div>
+		</>
+	)
+
 	return (
 		<>
 			<main className='hero'>
@@ -691,130 +814,9 @@ export default function App() {
 									)}
 								</div>
 							) : qrType === 'vCard' ? (
-								<AnimatePresence initial={false} mode='popLayout'>
-									{isEmpty && (
-										<motion.div
-											key='vcard-card'
-											className='vcard-card'
-											initial={{ opacity: 0, y: -20 }}
-											animate={{ opacity: 1, y: 0 }}
-											exit={{ opacity: 0, y: -40 }}
-											transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}>
-									<div className='vcard-row'>
-										<label htmlFor='vcard-name'>Full name</label>
-										<input
-											id='vcard-name'
-											ref={vcardNameRef}
-											type='text'
-											placeholder='Ada Lovelace'
-											value={vcardName}
-											onChange={(e) => setVcardName(e.target.value)}
-											onKeyDown={(e) => e.key === 'Enter' && generate()}
-											maxLength={80}
-										/>
-									</div>
-									<div className='vcard-row'>
-										<label htmlFor='vcard-org'>Organization</label>
-										<div className='vcard-org-fields'>
-											<input
-												id='vcard-org'
-												type='text'
-												placeholder='Company'
-												value={vcardOrg}
-												onChange={(e) => setVcardOrg(e.target.value)}
-												onKeyDown={(e) => e.key === 'Enter' && generate()}
-												maxLength={80}
-											/>
-											<input
-												type='text'
-												placeholder='Title'
-												value={vcardTitle}
-												onChange={(e) => setVcardTitle(e.target.value)}
-												onKeyDown={(e) => e.key === 'Enter' && generate()}
-												maxLength={80}
-											/>
-										</div>
-									</div>
-									<div className='vcard-row'>
-										<label htmlFor='vcard-phone'>Phone number</label>
-										<input
-											id='vcard-phone'
-											type='tel'
-											placeholder='+1 555 123 4567'
-											value={vcardPhone}
-											onChange={(e) => setVcardPhone(e.target.value)}
-											onKeyDown={(e) => e.key === 'Enter' && generate()}
-											maxLength={32}
-										/>
-									</div>
-									<div className='vcard-row'>
-										<label htmlFor='vcard-email'>Email</label>
-										<input
-											id='vcard-email'
-											type='email'
-											placeholder='ada@example.com'
-											value={vcardEmail}
-											onChange={(e) => setVcardEmail(e.target.value)}
-											onKeyDown={(e) => e.key === 'Enter' && generate()}
-											maxLength={254}
-										/>
-									</div>
-									<div className='vcard-row'>
-										<label htmlFor='vcard-url'>Website</label>
-										<input
-											id='vcard-url'
-											type='text'
-											placeholder='example.com (optional)'
-											value={vcardUrl}
-											onChange={(e) => setVcardUrl(e.target.value)}
-											onKeyDown={(e) => e.key === 'Enter' && generate()}
-											maxLength={500}
-										/>
-									</div>
-									<div className='vcard-row'>
-										<label htmlFor='vcard-address'>Address</label>
-										<input
-											id='vcard-address'
-											type='text'
-											placeholder='Optional'
-											value={vcardAddress}
-											onChange={(e) => setVcardAddress(e.target.value)}
-											onKeyDown={(e) => e.key === 'Enter' && generate()}
-											maxLength={200}
-										/>
-									</div>
-									<div className='vcard-footer'>
-										<GenerateButton
-											onClick={generate}
-											disabled={loading || vcardName.trim().length === 0}
-											hasText={vcardName.trim().length > 0}
-											shaking={shaking}
-											onShakeEnd={() => setShaking(false)}
-										/>
-										{(vcardName ||
-											vcardOrg ||
-											vcardTitle ||
-											vcardPhone ||
-											vcardEmail ||
-											vcardUrl ||
-											vcardAddress) && (
-											<ClearButton
-												key='clear-vcard'
-												onClick={() => {
-													setVcardName('')
-													setVcardOrg('')
-													setVcardTitle('')
-													setVcardPhone('')
-													setVcardEmail('')
-													setVcardUrl('')
-													setVcardAddress('')
-												}}
-											/>
-										)}
-									</div>
-									</motion.div>
-								)}
-							</AnimatePresence>
+									// The vCard fields live inside the 3D Lanyard card, rendered in the
+									// .qr-row preview area below (see the Lanyard cardFace prop).
+									null
 							) : (
 								<motion.div
 									layout='size'
@@ -1047,6 +1049,15 @@ export default function App() {
 								</motion.div>
 							)}
 						</AnimatePresence>
+							{/* vCard type: the form fields live on the face of a swinging
+							    3D lanyard badge. Drag the card to swing it. */}
+							{isEmpty && qrType === 'vCard' && (
+								<div className='vcard-lanyard'>
+									<Suspense fallback={null}>
+										<Lanyard position={[0, 0, 20]} cardFace={vcardFormFields} />
+									</Suspense>
+								</div>
+							)}
 					</div>
 				</div>
 			</main>
