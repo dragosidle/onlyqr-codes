@@ -137,11 +137,15 @@ function Band({
 
   // Composite the front/back images into the card's texture atlas (front = left
   // half, back = right half). Each image is drawn aspect-preserving (no stretch).
+  // Depends on cardFace's presence, not its identity: the cardFace element is
+  // recreated on every parent render (e.g. each keystroke in the form), and
+  // recompositing the atlas per keystroke is heavy enough to drop input events.
+  const hasCardFace = !!cardFace;
   const cardMap = useMemo(() => {
     const baseMap = materials.base.map;
     // Blank the front face when custom DOM content (cardFace) is rendered over
     // it, so the baked badge artwork/logo doesn't show behind the form.
-    const blankFront = !!cardFace && !frontImage;
+    const blankFront = hasCardFace && !frontImage;
     // Blank the back face whenever a custom backImage replaces the baked-in
     // branding, so none of the original artwork peeks out around it.
     const blankBack = !!backImage;
@@ -216,7 +220,7 @@ function Band({
     composite.anisotropy = 16;
     composite.needsUpdate = true;
     return composite;
-  }, [frontImage, backImage, imageFit, frontTex, backTex, materials.base.map, cardFace]);
+  }, [frontImage, backImage, imageFit, frontTex, backTex, materials.base.map, hasCardFace]);
   const [curve] = useState(
     () =>
       new THREE.CatmullRomCurve3([new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()])
