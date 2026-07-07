@@ -142,6 +142,9 @@ function Band({
     // Blank the front face when custom DOM content (cardFace) is rendered over
     // it, so the baked badge artwork/logo doesn't show behind the form.
     const blankFront = !!cardFace && !frontImage;
+    // Blank the back face whenever a custom backImage replaces the baked-in
+    // branding, so none of the original artwork peeks out around it.
+    const blankBack = !!backImage;
     if (!frontImage && !backImage && !blankFront) return baseMap;
 
     const baseImg = baseMap.image;
@@ -169,12 +172,26 @@ function Band({
       ctx.fillRect(rx, ry, rw, rh);
     }
 
-    const drawFitted = (img, rect) => {
-      const rx = rect.x * W;
-      const ry = rect.y * H;
-      const rw = rect.w * W;
-      const rh = rect.h * H;
-      const pick = imageFit === 'contain' ? Math.min : Math.max;
+    // Cover the back face the same way, erasing the baked branding before the
+    // replacement image is drawn on top.
+    if (blankBack) {
+      const rx = BACK_UV_RECT.x * W;
+      const ry = BACK_UV_RECT.y * H;
+      const rw = BACK_UV_RECT.w * W;
+      const rh = BACK_UV_RECT.h * H;
+      const sx = Math.round(rx + rw * 0.08);
+      const sy = Math.round(ry + rh * 0.05);
+      const s = ctx.getImageData(sx, sy, 1, 1).data;
+      ctx.fillStyle = `rgb(${s[0]}, ${s[1]}, ${s[2]})`;
+      ctx.fillRect(rx, ry, rw, rh);
+    }
+
+    const drawFitted = (img, rect, fit = imageFit, pad = 0) => {
+      const rx = rect.x * W + rect.w * W * pad;
+      const ry = rect.y * H + rect.h * H * pad;
+      const rw = rect.w * W * (1 - pad * 2);
+      const rh = rect.h * H * (1 - pad * 2);
+      const pick = fit === 'contain' ? Math.min : Math.max;
       const scale = pick(rw / img.width, rh / img.height);
       const dw = img.width * scale;
       const dh = img.height * scale;
@@ -189,7 +206,9 @@ function Band({
     };
 
     if (frontImage && frontTex.image) drawFitted(frontTex.image, FRONT_UV_RECT);
-    if (backImage && backTex.image) drawFitted(backTex.image, BACK_UV_RECT);
+    // The back logo is a small centred mark rather than a full-bleed photo, so
+    // it's always contained with generous padding regardless of imageFit.
+    if (backImage && backTex.image) drawFitted(backTex.image, BACK_UV_RECT, 'contain', 0.3);
 
     const composite = new THREE.CanvasTexture(canvas);
     composite.colorSpace = THREE.SRGBColorSpace;

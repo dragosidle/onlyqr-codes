@@ -24,6 +24,7 @@ import ClearButton from './ClearButton'
 // Lazy-loaded: the 3D lanyard pulls in three.js + rapier (~3 MB), so it only
 // loads when the vCard tab is opened rather than shipping in the main bundle.
 const Lanyard = lazy(() => import('./Lanyard/Lanyard.jsx'))
+import lanyardBackLogo from './Lanyard/logomark.svg'
 import aliDittherImg from './ali-ditther.avif'
 import onlyQrExampleImg from './only-qr-example.avif'
 import othersQrExampleImg from './others-qr-example.avif'
@@ -770,7 +771,7 @@ export default function App() {
 			{isEmpty && qrType === 'vCard' && (
 				<div className='vcard-lanyard-bg'>
 					<Suspense fallback={null}>
-						<Lanyard position={[0, 0, 11]} cardFace={vcardFormFields} />
+						<Lanyard position={[0, 0, 11]} cardFace={vcardFormFields} backImage={lanyardBackLogo} />
 					</Suspense>
 				</div>
 			)}
