@@ -99,6 +99,10 @@ function extractWifiSsid(wifiUri) {
 	return match ? match[1].replace(/\\(.)/g, '$1') : wifiUri
 }
 
+function extractVcardName(value) {
+	return value.replace(/^VCARD:/, '')
+}
+
 // WiFi passwords must never be persisted (BTF-65 / BTF-69) — this strips the
 // P: segment so stored URIs contain only the SSID and security type.
 function stripWifiPassword(wifiUri) {
@@ -187,12 +191,20 @@ export default function App() {
 	const [wifiSsid, setWifiSsid] = useState('')
 	const [wifiPassword, setWifiPassword] = useState('')
 	const [wifiPasswordVisible, setWifiPasswordVisible] = useState(true)
+	const [vcardName, setVcardName] = useState('')
+	const [vcardOrg, setVcardOrg] = useState('')
+	const [vcardTitle, setVcardTitle] = useState('')
+	const [vcardPhone, setVcardPhone] = useState('')
+	const [vcardEmail, setVcardEmail] = useState('')
+	const [vcardUrl, setVcardUrl] = useState('')
+	const [vcardAddress, setVcardAddress] = useState('')
 	// Auto-size the URL input to its content: a hidden sizer span mirrors the
 	// text (or placeholder), and we set the input width from its measurement so
 	// the pill grows with what's typed and pushes the Generate button along.
 	const sizerRef = useRef(null)
 	const inputRef = useRef(null)
 	const wifiSsidRef = useRef(null)
+	const vcardNameRef = useRef(null)
 	const [inputWidth, setInputWidth] = useState(null)
 	useLayoutEffect(() => {
 		const el = sizerRef.current
@@ -243,7 +255,8 @@ export default function App() {
 					t.isContentEditable)
 			)
 				return
-			const input = qrType === 'Wi-Fi' ? wifiSsidRef.current : inputRef.current
+			const input =
+				qrType === 'Wi-Fi' ? wifiSsidRef.current : qrType === 'vCard' ? vcardNameRef.current : inputRef.current
 			input?.focus()
 		}
 		window.addEventListener('keydown', onKeyDown)
@@ -371,6 +384,12 @@ export default function App() {
 			// it's only a history key/label, the QR itself is generated server-side
 			// from the credentials POSTed below.
 			value = `WIFI:T:${security};S:${escapeWifiValue(wifiSsid.trim())};;`
+		} else if (qrType === 'vCard') {
+			if (!vcardName.trim()) {
+				setShaking(true)
+				return
+			}
+			value = `VCARD:${vcardName.trim()}`
 		} else {
 			const raw = text.trim()
 			if (!raw) return
@@ -415,14 +434,42 @@ export default function App() {
 				if (!resPunched.ok) throw new Error(`Server returned ${resPunched.status}`)
 				const [none, punched] = await Promise.all([resNone.text(), resPunched.text()])
 				svgs = { none, punched }
+			} else if (qrType === 'vCard') {
+				const res = await fetch('/api/qr/vcard', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						name: vcardName.trim(),
+						org: vcardOrg.trim(),
+						title: vcardTitle.trim(),
+						phone: vcardPhone.trim(),
+						email: vcardEmail.trim(),
+						url: vcardUrl.trim(),
+						address: vcardAddress.trim(),
+					}),
+				})
+				if (!res.ok) throw new Error(`Server returned ${res.status}`)
+				svgs = { none: await res.text() }
 			} else {
 				const params = new URLSearchParams({ url: value })
 				const res = await fetch(`/api/qr?${params.toString()}`)
 				if (!res.ok) throw new Error(`Server returned ${res.status}`)
 				svgs = { none: await res.text() }
 			}
+			const vcard =
+				qrType === 'vCard'
+					? {
+							name: vcardName.trim(),
+							org: vcardOrg.trim(),
+							title: vcardTitle.trim(),
+							phone: vcardPhone.trim(),
+							email: vcardEmail.trim(),
+							url: vcardUrl.trim(),
+							address: vcardAddress.trim(),
+						}
+					: undefined
 			setDomains((prev) =>
-				[...prev, { url: value, type: qrType, svgs, punched: false }].slice(-MAX_DOMAINS),
+				[...prev, { url: value, type: qrType, svgs, punched: false, vcard }].slice(-MAX_DOMAINS),
 			)
 			setActiveUrl(value)
 			setNewUrls((prev) => new Set([...prev, value]))
@@ -452,6 +499,7 @@ export default function App() {
 		setPunchingUrl(url)
 		setShakingPunchUrl(url)
 		try {
+			let punched
 			if (url.startsWith('WIFI:')) {
 				// The password is never persisted, so the punched variant can't be
 				// rebuilt from history. It's prefetched at generate time; reaching
@@ -459,15 +507,24 @@ export default function App() {
 				throw new Error(
 					'This Wi-Fi QR was saved without its password — delete it and generate it again to use punch.',
 				)
+			} else if (url.startsWith('VCARD:')) {
+				const res = await fetch('/api/qr/vcard', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ ...d.vcard, hole: 'large', shape: 'square' }),
+				})
+				if (!res.ok) throw new Error(`Server returned ${res.status}`)
+				punched = await res.text()
+			} else {
+				const params = new URLSearchParams({
+					url,
+					hole: 'large',
+					shape: 'square',
+				})
+				const res = await fetch(`/api/qr?${params.toString()}`)
+				if (!res.ok) throw new Error(`Server returned ${res.status}`)
+				punched = await res.text()
 			}
-			const params = new URLSearchParams({
-				url,
-				hole: 'large',
-				shape: 'square',
-			})
-			const res = await fetch(`/api/qr?${params.toString()}`)
-			if (!res.ok) throw new Error(`Server returned ${res.status}`)
-			const punched = await res.text()
 			setPunchedThisSession(true)
 			setDomains((prev) =>
 				prev.map((x) =>
@@ -517,6 +574,13 @@ export default function App() {
 					.toLowerCase()
 					.replace(/[^a-z0-9]+/g, '-')
 					.replace(/^-+|-+$/g, '') || 'wifi'
+		} else if (d.type === 'vCard') {
+			const name = extractVcardName(d.url)
+			base =
+				name
+					.toLowerCase()
+					.replace(/[^a-z0-9]+/g, '-')
+					.replace(/^-+|-+$/g, '') || 'vcard'
 		} else {
 			base =
 				d.url
@@ -548,7 +612,7 @@ export default function App() {
 							<div className='type-tabs'>
 								<div className='type-tab-indicator' style={indicatorStyle} />
 								{QR_TYPES.map(({ label, Icon }, i) => {
-									const isDisabled = ['vCard', 'WhatsApp'].includes(label)
+									const isDisabled = ['WhatsApp'].includes(label)
 									const tab = (
 										<button
 											key={label}
@@ -625,6 +689,121 @@ export default function App() {
 											}}
 										/>
 									)}
+								</div>
+							) : qrType === 'vCard' ? (
+								<div className='vcard-card'>
+									<div className='vcard-row'>
+										<label htmlFor='vcard-name'>Full name</label>
+										<input
+											id='vcard-name'
+											ref={vcardNameRef}
+											type='text'
+											placeholder='Ada Lovelace'
+											value={vcardName}
+											onChange={(e) => setVcardName(e.target.value)}
+											onKeyDown={(e) => e.key === 'Enter' && generate()}
+											maxLength={80}
+										/>
+									</div>
+									<div className='vcard-row'>
+										<label htmlFor='vcard-org'>Organization</label>
+										<div className='vcard-org-fields'>
+											<input
+												id='vcard-org'
+												type='text'
+												placeholder='Company'
+												value={vcardOrg}
+												onChange={(e) => setVcardOrg(e.target.value)}
+												onKeyDown={(e) => e.key === 'Enter' && generate()}
+												maxLength={80}
+											/>
+											<input
+												type='text'
+												placeholder='Title'
+												value={vcardTitle}
+												onChange={(e) => setVcardTitle(e.target.value)}
+												onKeyDown={(e) => e.key === 'Enter' && generate()}
+												maxLength={80}
+											/>
+										</div>
+									</div>
+									<div className='vcard-row'>
+										<label htmlFor='vcard-phone'>Phone number</label>
+										<input
+											id='vcard-phone'
+											type='tel'
+											placeholder='+1 555 123 4567'
+											value={vcardPhone}
+											onChange={(e) => setVcardPhone(e.target.value)}
+											onKeyDown={(e) => e.key === 'Enter' && generate()}
+											maxLength={32}
+										/>
+									</div>
+									<div className='vcard-row'>
+										<label htmlFor='vcard-email'>Email</label>
+										<input
+											id='vcard-email'
+											type='email'
+											placeholder='ada@example.com'
+											value={vcardEmail}
+											onChange={(e) => setVcardEmail(e.target.value)}
+											onKeyDown={(e) => e.key === 'Enter' && generate()}
+											maxLength={254}
+										/>
+									</div>
+									<div className='vcard-row'>
+										<label htmlFor='vcard-url'>Website</label>
+										<input
+											id='vcard-url'
+											type='text'
+											placeholder='example.com (optional)'
+											value={vcardUrl}
+											onChange={(e) => setVcardUrl(e.target.value)}
+											onKeyDown={(e) => e.key === 'Enter' && generate()}
+											maxLength={500}
+										/>
+									</div>
+									<div className='vcard-row'>
+										<label htmlFor='vcard-address'>Address</label>
+										<input
+											id='vcard-address'
+											type='text'
+											placeholder='Optional'
+											value={vcardAddress}
+											onChange={(e) => setVcardAddress(e.target.value)}
+											onKeyDown={(e) => e.key === 'Enter' && generate()}
+											maxLength={200}
+										/>
+									</div>
+									<div className='vcard-footer'>
+										<GenerateButton
+											onClick={generate}
+											disabled={loading || vcardName.trim().length === 0}
+											hasText={vcardName.trim().length > 0}
+											shaking={shaking}
+											onShakeEnd={() => setShaking(false)}
+										/>
+										{(vcardName ||
+											vcardOrg ||
+											vcardTitle ||
+											vcardPhone ||
+											vcardEmail ||
+											vcardUrl ||
+											vcardAddress) && (
+											<ClearButton
+												key='clear-vcard'
+												onClick={() => {
+													setVcardName('')
+													setVcardOrg('')
+													setVcardTitle('')
+													setVcardPhone('')
+													setVcardEmail('')
+													setVcardUrl('')
+													setVcardAddress('')
+												}}
+											/>
+										)}
+									</div>
 								</div>
 							) : (
 								<motion.div
@@ -775,7 +954,9 @@ export default function App() {
 																? displayUrl(d.url)
 																: d.type === 'Wi-Fi'
 																	? midTruncate(extractWifiSsid(d.url))
-																	: midTruncate(d.url)}
+																	: d.type === 'vCard'
+																		? midTruncate(extractVcardName(d.url))
+																		: midTruncate(d.url)}
 														</button>
 														<button
 															type='button'

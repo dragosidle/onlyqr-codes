@@ -194,7 +194,9 @@ class VcardQrRequest(BaseModel):
     phone: str = Field(default="", max_length=32)
     email: str = Field(default="", max_length=254)
     org: str = Field(default="", max_length=80)
+    title: str = Field(default="", max_length=80)
     url: str = Field(default="", max_length=500)
+    address: str = Field(default="", max_length=200)
     hole: str | None = Field(default=None, pattern="^(small|medium|large)$")
     shape: str = Field(default="square", pattern="^(square|circle)$")
 
@@ -208,7 +210,9 @@ async def generate_vcard_qr(request: Request, body: VcardQrRequest):
         phone=body.phone or None,
         email=body.email or None,
         org=body.org or None,
+        title=body.title or None,
         url=body.url or None,
+        street=body.address or None,
     )
     svg = build_svg_cached(vcard, body.hole, body.shape)
     await _increment_daily_counter()

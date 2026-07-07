@@ -789,6 +789,102 @@ body {
 	box-shadow: none !important;
 }
 
+.vcard-card {
+	position: relative;
+	width: 100%;
+	max-width: 480px;
+	margin: 0 auto;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	border-radius: 24px;
+	border: 1px solid #e8e8e8;
+	background: var(--input-bg);
+	padding: 20px 24px;
+	transition:
+		border-bottom-color 100ms ease,
+		box-shadow 100ms ease,
+		background 100ms ease;
+}
+
+.vcard-card:focus-within {
+	background: #fff;
+	box-shadow:
+		0 -2px 5px 0 rgba(125, 125, 125, 0.1) inset,
+		0 2px 5px 0 #fff inset,
+		0 2px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.vcard-row {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+}
+
+.vcard-row label {
+	flex: 0 0 108px;
+	font-size: 14px;
+	font-weight: 500;
+	color: #8a8a8a;
+	user-select: none;
+}
+
+.vcard-row input {
+	flex: 1 1 auto;
+	min-width: 0;
+	border: none;
+	border-bottom: 1px solid #e8e8e8;
+	background: transparent;
+	padding: 6px 2px;
+	font-size: 16px;
+	color: #111111;
+	outline: none;
+	transition: border-color 120ms ease;
+}
+
+.vcard-row input:focus {
+	border-bottom-color: var(--accent);
+}
+
+.vcard-row input::placeholder {
+	opacity: 0.35;
+}
+
+.vcard-org-fields {
+	flex: 1 1 auto;
+	display: flex;
+	gap: 10px;
+	min-width: 0;
+}
+
+.vcard-org-fields input {
+	flex: 1 1 0;
+	min-width: 0;
+}
+
+.vcard-footer {
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+	gap: 8px;
+	margin-top: 4px;
+}
+
+@media (max-width: 600px) {
+	.vcard-row {
+		gap: 10px;
+	}
+
+	.vcard-row label {
+		flex-basis: 84px;
+		font-size: 13px;
+	}
+
+	.vcard-org-fields {
+		gap: 6px;
+	}
+}
+
 .checkbox {
 	display: flex;
 	align-items: center;
