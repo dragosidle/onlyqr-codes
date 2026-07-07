@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unknown-property */
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Canvas, extend, useFrame } from '@react-three/fiber';
+import { Canvas, extend, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, useTexture, Environment, Lightformer, Html } from '@react-three/drei';
 import { BallCollider, CuboidCollider, Physics, RigidBody, useRopeJoint, useSphericalJoint } from '@react-three/rapier';
 import { MeshLineGeometry, MeshLineMaterial } from 'meshline';
@@ -142,6 +142,12 @@ function Band({
     dir = new THREE.Vector3();
   const segmentProps = { type: 'dynamic', canSleep: true, colliders: false, angularDamping: 4, linearDamping: 4 };
   const { nodes, materials } = useGLTF(cardGLB);
+  // meshline sizes the band from its resolution uniform's aspect ratio, not
+  // the camera's. The upstream hardcoded [1000, 1000] assumes a square-ish
+  // canvas (true for the docs preview); on this app's full-page canvas the
+  // band would be stretched ~viewport-aspect× too wide. Use the real canvas
+  // size so the band keeps its intended width at any viewport shape.
+  const size = useThree(state => state.size);
   const texture = useTexture(lanyardImage || lanyard);
   // useTexture must be called unconditionally; use a blank pixel when an image
   // isn't supplied for a given face, then skip compositing it below.
@@ -370,10 +376,9 @@ function Band({
         <meshLineMaterial
           color="white"
           depthTest={false}
-          resolution={isMobile ? [1000, 2000] : [1000, 1000]}
-          transparent
-          useAlphaMap
-          alphaMap={texture}
+          resolution={[size.width, size.height]}
+          useMap
+          map={texture}
           repeat={[-4, 1]}
           lineWidth={lanyardWidth}
         />
