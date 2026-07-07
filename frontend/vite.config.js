@@ -13,6 +13,9 @@ const usePolling = process.env.VITE_USE_POLLING === "true";
 
 export default defineConfig({
   plugins: [react()],
+  // Treat .glb 3D models as URL assets (the Lanyard component imports card.glb).
+  // Vite 8's rolldown bundler otherwise tries to parse the binary as source.
+  assetsInclude: ["**/*.glb"],
   server: {
     host: true, // listen on 0.0.0.0 so the container is reachable from the host
     port: 5173,
