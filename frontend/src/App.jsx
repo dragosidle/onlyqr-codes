@@ -305,7 +305,9 @@ export default function App() {
 	useEffect(() => {
 		const onKeyDown = (e) => {
 			if (e.metaKey || e.ctrlKey || e.altKey) return
-			if (e.key.length !== 1 || !/[a-zA-Z0-9]/.test(e.key)) return
+			// Chrome fires keydown with e.key === undefined when a browser
+			// autofill/autocomplete suggestion is picked — guard before reading it.
+			if (typeof e.key !== 'string' || e.key.length !== 1 || !/[a-zA-Z0-9]/.test(e.key)) return
 			const t = e.target
 			if (
 				t instanceof HTMLElement &&
