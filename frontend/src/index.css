@@ -965,6 +965,15 @@ body {
 	visibility: hidden;
 }
 
+/* Backstop: the form re-enables pointer-events inside the click-through
+   canvas layer (and the frame loop toggles its inline visibility), so force
+   it inert whenever the whole lanyard layer is faded out — otherwise an
+   invisible form floats over and steals clicks from the QR track. */
+.vcard-lanyard-bg--hidden .lanyard-face-inner {
+	pointer-events: none;
+	visibility: hidden;
+}
+
 /* The vCard form composited onto the 3D card face via drei <Html transform>.
    Sized to cover the card's front face exactly (face = 0.716 × 1.0 local
    units; at cardFaceDistanceFactor 0.9, 1px = 0.9/400 units → 318 × 444px),

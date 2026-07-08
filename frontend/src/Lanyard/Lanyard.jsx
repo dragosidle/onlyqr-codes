@@ -325,7 +325,10 @@ function Band({
       quat.set(r.x, r.y, r.z, r.w);
       dir.set(0, 0, 1).applyQuaternion(quat);
       vec.copy(state.camera.position).sub(card.current.translation());
-      faceEl.current.style.visibility = dir.dot(vec) > 0 ? 'visible' : 'hidden';
+      // '' (not 'visible') when front-facing: an inline visibility:visible
+      // would override an ancestor's visibility:hidden, making the form catch
+      // clicks while the whole lanyard layer is faded out.
+      faceEl.current.style.visibility = dir.dot(vec) > 0 ? '' : 'hidden';
     }
   });
 
