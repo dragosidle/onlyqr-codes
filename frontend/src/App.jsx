@@ -24,6 +24,11 @@ import ClearButton from './ClearButton'
 // Lazy-loaded: the 3D lanyard pulls in three.js + rapier (~3 MB), so it only
 // loads when the vCard tab is opened rather than shipping in the main bundle.
 const Lanyard = lazy(() => import('./Lanyard/Lanyard.jsx'))
+// Temporary A/B: open the app with ?stock to render the untouched upstream
+// ReactBits Lanyard (no form, no custom band sizing) for glitch comparison.
+const LanyardStock = lazy(() => import('./Lanyard/LanyardStock.jsx'))
+const useStockLanyard =
+	typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('stock')
 import lanyardBackLogo from './Lanyard/logomark.svg'
 import aliDittherImg from './ali-ditther.avif'
 import onlyQrExampleImg from './only-qr-example.avif'
@@ -832,12 +837,16 @@ export default function App() {
 			{(lanyardVisible || lanyardMounted) && (
 				<div className={`vcard-lanyard-bg${lanyardShown ? '' : ' vcard-lanyard-bg--hidden'}`}>
 					<Suspense fallback={null}>
-						<Lanyard
-							position={[0, 0, 11]}
-							active={lanyardShown}
-							cardFace={vcardFormFields}
-							backImage={lanyardBackLogo}
-						/>
+						{useStockLanyard ? (
+							<LanyardStock />
+						) : (
+							<Lanyard
+								position={[0, 0, 11]}
+								active={lanyardShown}
+								cardFace={vcardFormFields}
+								backImage={lanyardBackLogo}
+							/>
+						)}
 					</Suspense>
 				</div>
 			)}
