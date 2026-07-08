@@ -21,10 +21,29 @@ extend({ MeshLineGeometry, MeshLineMaterial });
 useGLTF.preload(cardGLB);
 useTexture.preload(lanyard);
 
-// 1x1 transparent pixel — lets useTexture be called unconditionally when a
-// front/back image isn't supplied.
-const BLANK_PIXEL =
-  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+// Loads an image for 2D-canvas compositing only. Deliberately not useTexture:
+// drei force-uploads every texture to WebGL (gl.initTexture) even when it's
+// never rendered by the GPU, which wastes memory and chokes on SVG-backed
+// images ("texSubImage2D: bad image data").
+function useCompositeImage(src) {
+  const [img, setImg] = useState(null);
+  useEffect(() => {
+    if (!src) {
+      setImg(null);
+      return;
+    }
+    let alive = true;
+    const image = new Image();
+    image.onload = () => {
+      if (alive) setImg(image);
+    };
+    image.src = src;
+    return () => {
+      alive = false;
+    };
+  }, [src]);
+  return img;
+}
 
 // The card model's front face is UV-mapped to the LEFT half of the texture
 // atlas and the back face to the RIGHT half (measured from card.glb). Each
@@ -149,10 +168,8 @@ function Band({
   // size so the band keeps its intended width at any viewport shape.
   const size = useThree(state => state.size);
   const texture = useTexture(lanyardImage || lanyard);
-  // useTexture must be called unconditionally; use a blank pixel when an image
-  // isn't supplied for a given face, then skip compositing it below.
-  const frontTex = useTexture(frontImage || BLANK_PIXEL);
-  const backTex = useTexture(backImage || BLANK_PIXEL);
+  const frontImg = useCompositeImage(frontImage);
+  const backImg = useCompositeImage(backImage);
 
   // Composite the front/back images into the card's texture atlas (front = left
   // half, back = right half). Each image is drawn aspect-preserving (no stretch).
@@ -176,7 +193,7 @@ function Band({
     const canvas = document.createElement('canvas');
     canvas.width = W;
     canvas.height = H;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
     if (!ctx) return baseMap;
     // Keep the original baked atlas for the card edges and any untouched face.
     ctx.drawImage(baseImg, 0, 0, W, H);
@@ -228,10 +245,10 @@ function Band({
       ctx.restore();
     };
 
-    if (frontImage && frontTex.image) drawFitted(frontTex.image, FRONT_UV_RECT);
+    if (frontImg) drawFitted(frontImg, FRONT_UV_RECT);
     // The back logo is a small centred mark rather than a full-bleed photo, so
     // it's always contained with generous padding regardless of imageFit.
-    if (backImage && backTex.image) drawFitted(backTex.image, BACK_UV_RECT, 'contain', 0.3);
+    if (backImg) drawFitted(backImg, BACK_UV_RECT, 'contain', 0.3);
 
     const composite = new THREE.CanvasTexture(canvas);
     composite.colorSpace = THREE.SRGBColorSpace;
@@ -239,7 +256,7 @@ function Band({
     composite.anisotropy = 16;
     composite.needsUpdate = true;
     return composite;
-  }, [frontImage, backImage, imageFit, frontTex, backTex, materials.base.map, hasCardFace]);
+  }, [frontImage, backImage, imageFit, frontImg, backImg, materials.base.map, hasCardFace]);
   const [curve] = useState(
     () =>
       new THREE.CatmullRomCurve3([new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()])
@@ -283,9 +300,13 @@ function Band({
       [j1, j2].forEach(ref => {
         if (!ref.current.lerped) ref.current.lerped = new THREE.Vector3().copy(ref.current.translation());
         const clampedDistance = Math.max(0.1, Math.min(1, ref.current.lerped.distanceTo(ref.current.translation())));
+        // Clamp the lerp factor: past 1 Vector3.lerp extrapolates beyond the
+        // target, so any frame slower than ~20ms (factor = delta * speed > 1)
+        // shoots the smoothed points off in random directions and the band
+        // scrambles while the card moves.
         ref.current.lerped.lerp(
           ref.current.translation(),
-          delta * (minSpeed + clampedDistance * (maxSpeed - minSpeed))
+          Math.min(1, delta * (minSpeed + clampedDistance * (maxSpeed - minSpeed)))
         );
       });
       curve.points[0].copy(j3.current.translation());
